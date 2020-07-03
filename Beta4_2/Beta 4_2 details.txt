@@ -1,0 +1,37 @@
+Ocean Haghighi-Daly - Part III project
+Working attempt at Split-Operator method of wavepacket propagation
+Done in 3D
+Some code taken from Andrew Alderwick
+
+Beta 2_0 - as Beta 1_9_2 but split into functions into separate .m files, put in folder, and created this separate detail file to log changes between different code versions
+
+Beta 2_1_2 - creating new updategraphics methods to better display k-spaced representation of wavefn. Beta 2_1 deleted as was using it to quickly debug k-space plotting, potentially damaging some methods.
+
+Beta 2_2 - add method to plot values along a ring, to be able to obtain form-factors (i.e. look along ring in k-space after interaction).
+
+Beta 2_3 - save potential for later plotting
+
+Beta 2_4 - redefine Vroot. Vroot -> zCharacteristic which = Vroot/5. zCharacteristic is characteristic length scale on which V = Vmax*exp(-1).
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Beta 3_0 - as Beta 2_4, except added attractive (Morse) potential.
+
+Beta 3_1 - adding Morse-like potential and adapting functions so they can be called easier from script (i.e. more input parameters, fewer global variables)
+
+Beta 3_1b - for autoRun
+
+Beta 3_2 - remove specular peaks from form factor plotting (both standard and interpolated)
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Beta 4_0 - Adapting functions to be easier to run for time dependent potentials
+	 - Creating a propagator for time dependent potentials
+	 - Initialising 1 particle Brownian Motion path (to work in 1D and 2D surfaces)
+	 - Adapt functions to call time dependent potential (i.e. recalculate potential at new timesteps)
+
+Beta 4_1 - Update 'UpdateGraphics' function in 3D to show potential so particle positions can be seen
+
+Beta 4_2 - Add multiple adsorbates
+
