@@ -8,9 +8,9 @@
 
 % Units: SI Units:
 % hBar = 1.054571800e-34 Js. c = 299792458 m/s. eV = 1.6021766208e-19 J.
-% 1amu =  1.660539040e-27 kg. 1Å = 1e-10m. 1ps = 1e-12s.
+% 1amu =  1.660539040e-27 kg. 1Ã… = 1e-10m. 1ps = 1e-12s.
 % 3He mass = 3.0160293amu
-% 1Å ~ Atomic diameter
+% 1Ã… ~ Atomic diameter
 
 function WavepacketPropagation_beta4_2
 
@@ -67,7 +67,7 @@ function WavepacketPropagation_beta4_2
     SetupBrownianMotionGaussians();%%%NaN bug caused by something in here
    
     %SetupZeroPotential();
-    SetupWedgePotential();
+    %SetupWedgePotential();
     decayType = 2; % 1 = exponential repulsive. 2 = Morse attractive. 3 = Morse-like (needs alpha parameter input too!)
     alpha = 2; % Only needed for Morse-like potential. alpha = 2 gives Morse potential. alpha = 0 gives exponential potential.
     xSigma = 3*(5.50/6)*A;       % x standard deviation
