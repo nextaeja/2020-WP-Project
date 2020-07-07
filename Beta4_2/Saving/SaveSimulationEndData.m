@@ -17,7 +17,7 @@ function SaveSimulationEndData(simTimeEnd, simIterationEnd)
     
     %save('end_time.mat', 'simTimeEnd');
     
-    saveName = strcat('figure_time', num2str(simTimeEnd/ps));
+    saveName = strcat('figure_time', num2str(simTimeEnd/ps),".png");%%%
     print(saveName, '-dpng', '-r400');
     
     % Change back to starting directory - leave simlation saving location
