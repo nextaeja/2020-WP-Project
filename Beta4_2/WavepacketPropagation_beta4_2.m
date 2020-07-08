@@ -8,9 +8,9 @@
 
 % Units: SI Units:
 % hBar = 1.054571800e-34 Js. c = 299792458 m/s. eV = 1.6021766208e-19 J.
-% 1amu =  1.660539040e-27 kg. 1Å = 1e-10m. 1ps = 1e-12s.
+% 1amu =  1.660539040e-27 kg. 1Ã… = 1e-10m. 1ps = 1e-12s.
 % 3He mass = 3.0160293amu
-% 1Å ~ Atomic diameter
+% 1Ã… ~ Atomic diameter
 
 function WavepacketPropagation_beta4_2
 
@@ -22,7 +22,7 @@ function WavepacketPropagation_beta4_2
     addpath(genpath(pwd));
     
 %===SET=UP=VARIABLES====================================================================================%
-    global A ps eV nx ny nz lx ly lz eps tStart tFinish notifySteps gfxSteps psi psi0 dt0 dt savingSimulation savingDirectory propagationMethod numAdsorbates
+    global A ps eV nx ny nz lx ly lz eps tStart tFinish notifySteps gfxSteps psi psi0 dt0 dt savingSimulation savingDirectory propagationMethod numAdsorbates decayType
     
     SetupSIUnits();
     
@@ -32,9 +32,9 @@ function WavepacketPropagation_beta4_2
     lz = 90*A;
     
     % Setup grid - use powers of 2 for quickest FFT
-    nx = 128;
-    ny = 128;
-    nz = 512;
+    nx = 64;
+    ny = 64;
+    nz = 256;
     
     % Acceptable error in wavepacket norm
     eps = 1e-6;
@@ -51,7 +51,7 @@ function WavepacketPropagation_beta4_2
     notifySteps = floor(numSteps/numGfxToSave);   % TODO: Change to notifytime. # steps after which to notify user of progress
     gfxSteps = floor(numSteps/numGfxToSave);      % TODO: Change to gfxtime # steps after which, update graphics
     psiSaveSteps = floor(numSteps/numPsiToSave);
-    
+   
     savingSimulation = true;
     
     % Propagation method: 1 = RK4Step. 2 = Split Operator O(dt^2). 3 = Split Operator O(dt^3), K split. 4 = Sp. Op. O(dt^3), V split. 5 = Sp.Op. O(dt^3), V
@@ -60,12 +60,15 @@ function WavepacketPropagation_beta4_2
     
     SetupVariables();
     
-    numAdsorbates = 60;
-    SetupBrownianMotionGaussians();
+    numAdsorbates = 30;
     
+    tFinish=tFinish+dt %%%NaN bug
+    
+    SetupBrownianMotionGaussians();%%%NaN bug caused by something in here
+   
     %SetupZeroPotential();
     %SetupWedgePotential();
-    decayType = 1; % 1 = exponential repulsive. 2 = Morse attractive. 3 = Morse-like (needs alpha parameter input too!)
+    decayType = 2; % 1 = exponential repulsive. 2 = Morse attractive. 3 = Morse-like (needs alpha parameter input too!)
     alpha = 2; % Only needed for Morse-like potential. alpha = 2 gives Morse potential. alpha = 0 gives exponential potential.
     xSigma = 3*(5.50/6)*A;       % x standard deviation
     ySigma = 3*(5.50/6)*A;       % y standard deviation
@@ -83,8 +86,9 @@ function WavepacketPropagation_beta4_2
     fprintf('Variable setup complete. Time: %.6fs.\n', toc);
     
 %===SAVING=RESULTS=====================================================================================%
-    % Variable dictating whether simulation saved in 'Simulations' folder or not
-    savingDirectory = 'E:\Shared OS folder\University\Work\Year 4\Project\Code\Matlab\PhysicalSimulations\Dynamic Simulations\Brownian Motion 3D dummy setup - 60 particles';
+    % Variable dictating whether simulation saved in 'Simulations' folder
+    % or not 
+    savingDirectory = 'C:\Users\jackl\Documents\MATLAB\summer 2020';
     
     % Create unique simulation folder to store results
     if(savingSimulation)
@@ -106,15 +110,17 @@ function WavepacketPropagation_beta4_2
     psi = psi0;
     dt = dt0;
     t = tStart;
+   
     
     % it = iteration. Starts at 1, represents the iteration CURRENTLY being carried out.
     it = 1;
     
     % Use integers for loop equality test. CARE: round will give you closest # to tFinish/dt and might be floor or ceiling value
-    numIterations = round(tFinish/dt);
+    numIterations = round(tFinish/dt)-1;
+    
     
     % Loop iteratively until tFinish reached
-    while(it <= numIterations)
+    while(it <= numIterations)  
         % Total probability
         totProb = sum(sum(sum(psi.*conj(psi))));
         
@@ -148,7 +154,6 @@ function WavepacketPropagation_beta4_2
                     SaveSimulationRunning(t);
                 end
             end
-            
             % Save psi if necessary
             if savingSimulation && psiSaveSteps > 0 && mod(it - 1, psiSaveSteps) == 0
                 saveName = strcat('psi_t', num2str(t/ps), '.mat');
@@ -176,7 +181,7 @@ function WavepacketPropagation_beta4_2
         end
         
     end %While
-    
+    %numIterations=numIterations-1;
     % Tell user run is complete
     % Note, finalIteration = it - 1 as it starts counting at 1. t starts at 0 though, and t represents the time just after the last iteration, so tFinal = t
     fprintf('Run Complete.\nNumber of iterations = %d\nFinal simulation time = %.16e\n', it - 1, t);
