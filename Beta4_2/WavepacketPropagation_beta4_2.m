@@ -52,7 +52,7 @@ function WavepacketPropagation_beta4_2
     gfxSteps = floor(numSteps/numGfxToSave);      % TODO: Change to gfxtime # steps after which, update graphics
     psiSaveSteps = floor(numSteps/numPsiToSave);
    
-    savingSimulation = true;
+    savingSimulation = false;
     
     % Propagation method: 1 = RK4Step. 2 = Split Operator O(dt^2). 3 = Split Operator O(dt^3), K split. 4 = Sp. Op. O(dt^3), V split. 5 = Sp.Op. O(dt^3), V
     % split, time dependent.
@@ -62,7 +62,7 @@ function WavepacketPropagation_beta4_2
     
     numAdsorbates = 30;
     
-    tFinish=tFinish+dt %%%NaN bug
+    tFinish=tFinish+dt; %%%NaN bug
     
     SetupBrownianMotionGaussians();%%%NaN bug caused by something in here
    
