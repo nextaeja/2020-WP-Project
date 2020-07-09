@@ -45,7 +45,7 @@ function WavepacketPropagation_beta4_2
     tFinish = 12*ps;    % Units = s
         
     savingSimulationRunning = false;
-    savingSimulationEnd = true;
+    savingSimulationEnd = false;
     realTimePlotting = true;
     displayAdsorbateAnimation = false;
 
