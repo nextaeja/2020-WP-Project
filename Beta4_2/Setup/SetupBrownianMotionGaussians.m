@@ -1,4 +1,4 @@
-function SetupBrownianMotionGaussians()
+function SetupBrownianMotionGaussians(displayAdsorbateAnimation, realTimePlotting)
     global A ps amu lx ly nx ny dx dy tStart tFinish gaussianPositions gaussianPositionsTimes numAdsorbates;
     xmax = [(lx - dx) (ly - dy)];
     vmax = 5*A/ps; % max initial speed in A/ps
@@ -49,15 +49,22 @@ function SetupBrownianMotionGaussians()
     
     for adsorbateNum = 1:numAdsorbates
         plot(squeeze(gaussianPositions(adsorbateNum, 1, :))/A, squeeze(gaussianPositions(adsorbateNum, 2, :))/A, '.', 'MarkerSize', 1);
-        hold on
+        hold on;
     end
     xlim([0 lx/A]);
     ylim([0 ly/A]);
     xlabel('lx /A');
     ylabel('ly /A');
-    figure
+    hold off
     
     % Display animated adsorbate motion before wavefunction propagation
-    DisplayAdsorbateAnimation(squeeze(gaussianPositions(:,1,:)), squeeze(gaussianPositions(:,2,:)), lx - dx, ly - dy);
-    figure
+    if displayAdsorbateAnimation
+        figure
+        DisplayAdsorbateAnimation(squeeze(gaussianPositions(:,1,:)), squeeze(gaussianPositions(:,2,:)), lx - dx, ly - dy);
+    end
+    
+    % Prepare a new window if need to display real time animation
+    if realTimePlotting
+        figure
+    end
 end

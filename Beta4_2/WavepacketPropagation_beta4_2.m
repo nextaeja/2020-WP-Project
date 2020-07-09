@@ -22,7 +22,7 @@ function WavepacketPropagation_beta4_2
     addpath(genpath(pwd));
     
 %===SET=UP=VARIABLES====================================================================================%
-    global A ps eV nx ny nz lx ly lz eps tStart tFinish notifySteps gfxSteps psi psi0 dt0 dt savingSimulation savingDirectory propagationMethod numAdsorbates
+    global A ps eV nx ny nz lx ly lz eps tStart tFinish notifySteps gfxSteps psi psi0 dt0 dt savingSimulationRunning savingDirectory propagationMethod numAdsorbates
     
     SetupSIUnits();
     
@@ -32,9 +32,9 @@ function WavepacketPropagation_beta4_2
     lz = 90*A;
     
     % Setup grid - use powers of 2 for quickest FFT
-    nx = 128;
-    ny = 128;
-    nz = 512;
+    nx = 32;
+    ny = 32;
+    nz = 32;
     
     % Acceptable error in wavepacket norm
     eps = 1e-6;
@@ -43,16 +43,24 @@ function WavepacketPropagation_beta4_2
     dt0 = 0.01*ps;      % Initial timestep. Units = s
     tStart = 0*ps;      % Units = s
     tFinish = 12*ps;    % Units = s
-    
-    numGfxToSave = 5;
+        
+    savingSimulationRunning = false;
+    savingSimulationEnd = true;
+    realTimePlotting = true;
+    displayAdsorbateAnimation = false;
+
     numPsiToSave = 5;
+    numGfxToSave = 20;
     numSteps = round(tFinish/dt0);
     
     notifySteps = floor(numSteps/numGfxToSave);   % TODO: Change to notifytime. # steps after which to notify user of progress
-    gfxSteps = floor(numSteps/numGfxToSave);      % TODO: Change to gfxtime # steps after which, update graphics
     psiSaveSteps = floor(numSteps/numPsiToSave);
     
-    savingSimulation = true;
+    if realTimePlotting
+        gfxSteps = floor(numSteps/numGfxToSave);      % TODO: Change to gfxtime # steps after which, update graphics
+    else
+        gfxSteps = 0;
+    end
     
     % Propagation method: 1 = RK4Step. 2 = Split Operator O(dt^2). 3 = Split Operator O(dt^3), K split. 4 = Sp. Op. O(dt^3), V split. 5 = Sp.Op. O(dt^3), V
     % split, time dependent.
@@ -60,8 +68,8 @@ function WavepacketPropagation_beta4_2
     
     SetupVariables();
     
-    numAdsorbates = 60;
-    SetupBrownianMotionGaussians();
+    numAdsorbates = 2;
+    SetupBrownianMotionGaussians(displayAdsorbateAnimation, realTimePlotting);
     
     %SetupZeroPotential();
     %SetupWedgePotential();
@@ -73,7 +81,7 @@ function WavepacketPropagation_beta4_2
     wellDepth = 10e-3*eV;
     UpdateBrownianMotionGaussians(decayType, alpha, xSigma, ySigma, gaussPeakVal, wellDepth, tStart);
     %SetupStaticGaussianPotential(decayType, alpha, xSigma, ySigma, gaussPeakVal, wellDepth);
-    
+
     % Initialises psi0
     SetupInitialWavefunction();
     
@@ -84,20 +92,20 @@ function WavepacketPropagation_beta4_2
     
 %===SAVING=RESULTS=====================================================================================%
     % Variable dictating whether simulation saved in 'Simulations' folder or not
-    savingDirectory = 'E:\Shared OS folder\University\Work\Year 4\Project\Code\Matlab\PhysicalSimulations\Dynamic Simulations\Brownian Motion 3D dummy setup - 60 particles';
+    savingDirectory = '/home/lorenzo/Documents/Cambridge/internships/surface_physics/oceanprojectreportandcode/saving_dir/';
     
     % Create unique simulation folder to store results
-    if(savingSimulation)
+    if(savingSimulationRunning || savingSimulationEnd)
         CreateNewSimulationFolder();
     end
     
     % Save initialisation data
-    if(savingSimulation)
+    if(savingSimulationRunning || savingSimulationEnd)
         SaveInitialisationData(alpha, xSigma, ySigma, gaussPeakVal, wellDepth, savingDirectory);
     end
     
     % Make display full screen if saving simulation and gfxSteps > 0
-    if(savingSimulation && gfxSteps > 0)
+    if(savingSimulationRunning && gfxSteps > 0)
         figure('units','normalized','outerposition',[0 0 1 1])
     end
     
@@ -144,13 +152,13 @@ function WavepacketPropagation_beta4_2
             if gfxSteps > 0 && mod(it - 1, gfxSteps) == 0
                 UpdateGraphics(t, it - 1)
                 
-                if savingSimulation
+                if savingSimulationRunning
                     SaveSimulationRunning(t);
                 end
             end
             
             % Save psi if necessary
-            if savingSimulation && psiSaveSteps > 0 && mod(it - 1, psiSaveSteps) == 0
+            if savingSimulationRunning && psiSaveSteps > 0 && mod(it - 1, psiSaveSteps) == 0
                 saveName = strcat('psi_t', num2str(t/ps), '.mat');
                 save(saveName, 'psi');
             end
@@ -187,7 +195,7 @@ function WavepacketPropagation_beta4_2
     end
     
     % If saving simulation, print end data to file
-    if(savingSimulation)
+    if(savingSimulationRunning || savingSimulationEnd)
        SaveSimulationEndData(t, it - 1);
     end
 end
