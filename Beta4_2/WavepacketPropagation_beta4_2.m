@@ -8,9 +8,9 @@
 
 % Units: SI Units:
 % hBar = 1.054571800e-34 Js. c = 299792458 m/s. eV = 1.6021766208e-19 J.
-% 1amu =  1.660539040e-27 kg. 1Å = 1e-10m. 1ps = 1e-12s.
+% 1amu =  1.660539040e-27 kg. 1Ã… = 1e-10m. 1ps = 1e-12s.
 % 3He mass = 3.0160293amu
-% 1Å ~ Atomic diameter
+% 1Ã… ~ Atomic diameter
 
 function WavepacketPropagation_beta4_2
 
@@ -22,7 +22,7 @@ function WavepacketPropagation_beta4_2
     addpath(genpath(pwd));
     
 %===SET=UP=VARIABLES====================================================================================%
-    global A ps eV nx ny nz lx ly lz eps tStart tFinish notifySteps gfxSteps psi psi0 dt0 dt savingSimulationRunning savingDirectory propagationMethod numAdsorbates
+    global A ps eV nx ny nz lx ly lz eps tStart tFinish notifySteps gfxSteps psi psi0 dt0 dt savingSimulationRunning savingDirectory propagationMethod numAdsorbates decayType
     
     SetupSIUnits();
     
@@ -32,9 +32,9 @@ function WavepacketPropagation_beta4_2
     lz = 90*A;
     
     % Setup grid - use powers of 2 for quickest FFT
-    nx = 32;
-    ny = 32;
-    nz = 32;
+    nx = 64;
+    ny = 64;
+    nz = 256;
     
     % Acceptable error in wavepacket norm
     eps = 1e-6;
@@ -68,12 +68,15 @@ function WavepacketPropagation_beta4_2
     
     SetupVariables();
     
-    numAdsorbates = 2;
-    SetupBrownianMotionGaussians(displayAdsorbateAnimation, realTimePlotting);
+
+    numAdsorbates = 30;
+    SetupBrownianMotionGaussians(displayAdsorbateAnimation, realTimePlotting);%%%NaN bug caused by something in here
     
+    tFinish=tFinish+dt; %%%NaN bug
+   
     %SetupZeroPotential();
     %SetupWedgePotential();
-    decayType = 1; % 1 = exponential repulsive. 2 = Morse attractive. 3 = Morse-like (needs alpha parameter input too!)
+    decayType = 2; % 1 = exponential repulsive. 2 = Morse attractive. 3 = Morse-like (needs alpha parameter input too!)
     alpha = 2; % Only needed for Morse-like potential. alpha = 2 gives Morse potential. alpha = 0 gives exponential potential.
     xSigma = 3*(5.50/6)*A;       % x standard deviation
     ySigma = 3*(5.50/6)*A;       % y standard deviation
@@ -91,8 +94,9 @@ function WavepacketPropagation_beta4_2
     fprintf('Variable setup complete. Time: %.6fs.\n', toc);
     
 %===SAVING=RESULTS=====================================================================================%
-    % Variable dictating whether simulation saved in 'Simulations' folder or not
-    savingDirectory = '/home/lorenzo/Documents/Cambridge/internships/surface_physics/oceanprojectreportandcode/saving_dir/';
+    % Variable dictating whether simulation saved in 'Simulations' folder
+    % or not 
+    savingDirectory = strcat(pwd,'\SavedSimulation');
     
     % Create unique simulation folder to store results
     if(savingSimulationRunning || savingSimulationEnd)
@@ -114,15 +118,17 @@ function WavepacketPropagation_beta4_2
     psi = psi0;
     dt = dt0;
     t = tStart;
+   
     
     % it = iteration. Starts at 1, represents the iteration CURRENTLY being carried out.
     it = 1;
     
     % Use integers for loop equality test. CARE: round will give you closest # to tFinish/dt and might be floor or ceiling value
-    numIterations = round(tFinish/dt);
+    numIterations = round(tFinish/dt)-1;
+    
     
     % Loop iteratively until tFinish reached
-    while(it <= numIterations)
+    while(it <= numIterations)  
         % Total probability
         totProb = sum(sum(sum(psi.*conj(psi))));
         
@@ -156,7 +162,6 @@ function WavepacketPropagation_beta4_2
                     SaveSimulationRunning(t);
                 end
             end
-            
             % Save psi if necessary
             if savingSimulationRunning && psiSaveSteps > 0 && mod(it - 1, psiSaveSteps) == 0
                 saveName = strcat('psi_t', num2str(t/ps), '.mat');
@@ -184,7 +189,7 @@ function WavepacketPropagation_beta4_2
         end
         
     end %While
-    
+    %numIterations=numIterations-1;
     % Tell user run is complete
     % Note, finalIteration = it - 1 as it starts counting at 1. t starts at 0 though, and t represents the time just after the last iteration, so tFinal = t
     fprintf('Run Complete.\nNumber of iterations = %d\nFinal simulation time = %.16e\n', it - 1, t);

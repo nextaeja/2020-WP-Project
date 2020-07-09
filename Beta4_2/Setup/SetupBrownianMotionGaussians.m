@@ -31,7 +31,7 @@ function SetupBrownianMotionGaussians(displayAdsorbateAnimation, realTimePlottin
             % Random motion impulses at given times
             xi = 2*(rand(1, numImpulses) - 0.5);
             xi_t = linspace(tStart, tFinish, numImpulses);
-
+      
             % Do integration
             [t, y] = ode45(@(t,y) RandomMotionDifferentialEquation(t,y, xi, xi_t, gamma, m), [tStart tFinish], y0);
 
