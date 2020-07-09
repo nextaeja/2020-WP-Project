@@ -6,6 +6,9 @@ function CreateNewSimulationFolder()
     startingDirectory = pwd;
 
     % Change directory to save simulation in designated folder
+    if ~exist(savingDirectory, 'dir')
+       mkdir(savingDirectory)
+    end
     cd(savingDirectory);
 
     % Get folder contents to be able to create next simulation directory
