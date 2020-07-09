@@ -72,7 +72,11 @@ function WavepacketPropagation_beta4_2
     numAdsorbates = 30;
     SetupBrownianMotionGaussians(displayAdsorbateAnimation, realTimePlotting);%%%NaN bug caused by something in here
     
-    tFinish=tFinish+dt; %%%NaN bug
+
+    tFinish=tFinish+dt0; %%%NaN bug
+    
+    SetupBrownianMotionGaussians();%%%NaN bug caused by something in here
+
    
     %SetupZeroPotential();
     %SetupWedgePotential();
