@@ -88,7 +88,7 @@ function WavepacketPropagation_beta4_2
 %===SAVING=RESULTS=====================================================================================%
     % Variable dictating whether simulation saved in 'Simulations' folder
     % or not 
-    savingDirectory = 'C:\Users\jackl\Documents\MATLAB\summer 2020';
+    savingDirectory = strcat(pwd,'\SavedSimulation');
     
     % Create unique simulation folder to store results
     if(savingSimulation)
