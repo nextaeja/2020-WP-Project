@@ -32,9 +32,9 @@ function WavepacketPropagation_beta4_2
     lz = 90*A;
     
     % Setup grid - use powers of 2 for quickest FFT
-    nx = 64;
-    ny = 64;
-    nz = 256;
+    nx = 32;
+    ny = 32;
+    nz = 32;
     
     % Acceptable error in wavepacket norm
     eps = 1e-6;
@@ -42,7 +42,7 @@ function WavepacketPropagation_beta4_2
     % Time properties
     dt0 = 0.01*ps;      % Initial timestep. Units = s
     tStart = 0*ps;      % Units = s
-    tFinish = 12*ps;    % Units = s
+    tFinish = 3*ps;    % Units = s
         
     savingSimulationRunning = false;
     savingSimulationEnd = false;
@@ -70,8 +70,13 @@ function WavepacketPropagation_beta4_2
     
     SetupVariables();
     
+    % Setup debug variables
+    cTime = 0.0;
+    standardTime = 0.0;
+    nCalls = 0;
+    
 
-    numAdsorbates = 30;
+    numAdsorbates = 1;
     
     custompaths= true;
     pathfile="brownianpaths.txt";
@@ -198,6 +203,7 @@ function WavepacketPropagation_beta4_2
     % Tell user run is complete
     % Note, finalIteration = it - 1 as it starts counting at 1. t starts at 0 though, and t represents the time just after the last iteration, so tFinal = t
     fprintf('Run Complete.\nNumber of iterations = %d\nFinal simulation time = %.16e\n', it - 1, t);
+    fprintf("MATLAB time: %.5fms, C time: %.5fms\n", standardTime/nCalls*1000, cTime/nCalls*1000);
     
     % Force graphics update so psi_final is displayed
     if gfxSteps > 0
