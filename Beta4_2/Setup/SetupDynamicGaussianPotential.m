@@ -31,12 +31,12 @@ function SetupDynamicGaussianPotential(decayType, inParameterIfNeeded, xSigmaIn,
     
     % Use loop to calculate for all adsorbates
     zOffset2D = zeros(nx, ny, 'gpuArray');
-    xSigma2D(1:nx, 1:ny) = xSigma;
-    ySigma2D(1:nx, 1:ny) = ySigma;
+    xSigma2D(1:nx, 1:ny) = xSigma; %%THIS ISNT A GPU ARRAY
+    ySigma2D(1:nx, 1:ny) = ySigma; %%THIS ISNT A GPU ARRAY
     for adsorbateNum = 1:numAdsorbates
         % Setup 2D constants to use as input arguments for arrayfun use
         x02D(1:nx, 1:ny) = x0(adsorbateNum);
-        y02D(1:nx, 1:ny) = y0(adsorbateNum);
+        y02D(1:nx, 1:ny) = y0(adsorbateNum); %%THESE AREN'T GPU ARRAYS
 
         % Calculate 2D then 3D Gaussian grid - i.e. zoffset grid
         zOffset2D = zOffset2D + gaussianPeakVal*arrayfun(@gaussian2DGrid, xGrid2D, yGrid2D, x02D, y02D, xSigma2D, ySigma2D);
