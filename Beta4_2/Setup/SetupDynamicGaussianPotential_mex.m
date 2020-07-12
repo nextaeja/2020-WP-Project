@@ -6,13 +6,15 @@
 % Note: parameterIfNeeded is unused for decayType 1 and 2, so should be set arbitrarily to 0
 %
 function SetupDynamicGaussianPotential_mex(decayType, inParameterIfNeeded, xSigmaIn, ySigmaIn, gaussPeakValIn, wellDepthIn, x0, y0)
-    global nx ny nz lx ly dx dy dz eV A numAdsorbates cTime standardTime nCalls; % Needed in function
+    global nx ny nz lx ly dx dy dz eV A numAdsorbates; % Needed in function
     global V; % Set in function
     
     % Gaussian Properties
-    xSigma = xSigmaIn;%2*(5.50/6)*A;       % x standard deviation
-    ySigma = ySigmaIn;%2*(5.50/6)*A;       % y standard deviation
-    gaussianPeakVal = gaussPeakValIn;%2*1.61*A;   % peak value of Gaussian
+    %x0 = (lx - dx)/2;   % x-centre of Gaussian
+    %y0 = (ly - dy)/2;   % y-centre of Gaussian
+    xSigma = xSigmaIn;       % x standard deviation
+    ySigma = ySigmaIn;       % y standard deviation
+    gaussianPeakVal = gaussPeakValIn;   % peak value of Gaussian
     
     % Setup 1D x, y, z grids
     xGrid1D = gpuArray(dx*(0:nx-1));
@@ -78,18 +80,7 @@ function SetupDynamicGaussianPotential_mex(decayType, inParameterIfNeeded, xSigm
             a3D(1:nx, 1:ny, 1:nz) = a;
             
             % Call function
-            copy_zeffective = zEffective3D;
-            
-            % Run the matlab version for comparison
-            tic
             zEffective3D = arrayfun(@morsePotential, zEffective3D, wellDepth3D, wellMinZPt3D, a3D);
-            standardTime = standardTime + toc;
-            
-            % Run the standard C version
-            tic
-            cTime = cTime + toc;
-            
-            nCalls = nCalls + 1;
             
         case 3
             % Setup matrices to perform calculation with arrayfun GPU method
@@ -108,7 +99,6 @@ function SetupDynamicGaussianPotential_mex(decayType, inParameterIfNeeded, xSigm
     V = zEffective3D;
     
 end
-
 function gaussianVal = gaussian2DGrid(x, y, x0, y0, xSigma, ySigma)
     % Gaussian exp arguments
     xArg = -(x-x0)^2/(2*xSigma^2);
@@ -116,7 +106,6 @@ function gaussianVal = gaussian2DGrid(x, y, x0, y0, xSigma, ySigma)
     
     gaussianVal = exp(xArg + yArg);
 end
-
 function potentialVal = zLinearPotential1D(z, Vmax, zCharacteristic)
     % Implement linear potential that goes to 0 at some cutoff
     if(z < zCharacteristic)
@@ -125,15 +114,12 @@ function potentialVal = zLinearPotential1D(z, Vmax, zCharacteristic)
         potentialVal = 0;
     end
 end
-
 function potentialVal = zExpPotential1D(z, Vmax, zCharacteristic, offset)
     potentialVal = Vmax*exp(-(1/zCharacteristic)*(z - offset));
 end
-
 function potentialVal = morsePotential(z, wellDepth, wellMinZPt, a)
     potentialVal = wellDepth*((1-exp(-a*(z-wellMinZPt)))^2 - 1);
 end
-
 function potentialVal = morseLikePotential(z, wellDepth, wellMinZPt, a, alpha)
     potentialVal = wellDepth*(exp(-2*a*(z - wellMinZPt)) - alpha*exp(-a*(z - wellMinZPt)));
 end
