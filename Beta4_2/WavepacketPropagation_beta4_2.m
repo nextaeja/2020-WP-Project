@@ -32,9 +32,9 @@ function WavepacketPropagation_beta4_2
     lz = 90*A;
     
     % Setup grid - use powers of 2 for quickest FFT
-    nx = 32;
-    ny = 32;
-    nz = 32;
+    nx = 64;
+    ny = 64;
+    nz = 256;
     
     lx = nx*2;
     ly = ny*3;
