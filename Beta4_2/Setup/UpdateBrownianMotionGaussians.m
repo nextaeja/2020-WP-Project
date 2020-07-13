@@ -20,14 +20,17 @@ function UpdateBrownianMotionGaussians(decayType, inParameterIfNeeded, xSigmaIn,
     
     % Run the cuda function
     tic
-    cuda_potential = cuda_setup_dynamic_potential(decayType, inParameterIfNeeded, xSigmaIn, ySigmaIn, gaussPeakValIn, wellDepthIn, x0, y0, dx, dy, dz, A, nx, ny, nz);
+    cuda_potential = cuda_setup_dynamic_potential_2(decayType, inParameterIfNeeded, xSigmaIn, ySigmaIn, gaussPeakValIn, wellDepthIn, x0, y0, dx, dy, dz, A, nx, ny, nz);
     cudaTime = cudaTime + toc;
-    
+        
     % Check for correctness
     assert(isequal(size(correctV), size(c_potential)));
-    assert(isequal(correctV, c_potential));
     assert(isequal(size(correctV), size(cuda_potential)));
-    assert(isequal(correctV, cuda_potential));
+
+    tolerance = 1e-15;
+    %max(max(max(abs(correctV-cuda_potential))))
+    assert(sum(sum(sum(abs(correctV-c_potential) > tolerance))) == 0);
+    assert(sum(sum(sum(abs(correctV-cuda_potential) > tolerance))) == 0);
     
     nCalls = nCalls + 1;
 end

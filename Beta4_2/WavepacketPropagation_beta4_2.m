@@ -32,13 +32,9 @@ function WavepacketPropagation_beta4_2
     lz = 90*A;
     
     % Setup grid - use powers of 2 for quickest FFT
-    nx = 64;
-    ny = 64;
+    nx = 128;
+    ny = 128;
     nz = 256;
-    
-    lx = nx*2;
-    ly = ny*3;
-    lz = nz*4;
     
     % Acceptable error in wavepacket norm
     eps = 1e-6;
@@ -171,7 +167,7 @@ function WavepacketPropagation_beta4_2
                 fprintf(1, 'Step %d complete (%.3f ps, %.3f s): propagate wpkt (unitarity %.7f)\n', it - 1, t/ps, toc, totProb);
                 fprintf("  MATLAB time: %.5fms\n", standardTime/nCalls*1000);
                 fprintf("  C      time: %.5fms, speedup x%.1f\n", cTime/nCalls*1000, standardTime/cTime);
-                fprintf("  CUDA   time: %.5fms, speedup x%.1f\n", cudaTime/nCalls*1000, standardTime/cudaTime);
+                fprintf("  CUDA   time: %.5fms, speedup x%.1f x%.1f\n", cudaTime/nCalls*1000, standardTime/cudaTime, cTime/cudaTime);
             end
             
             % Produce graphics if asked and if correct # of steps has passed
@@ -213,7 +209,7 @@ function WavepacketPropagation_beta4_2
     fprintf('Run Complete.\nNumber of iterations = %d\nFinal simulation time = %.16e\n', it - 1, t);
     fprintf("MATLAB time: %.5fms\n", standardTime/nCalls*1000);
     fprintf("C      time: %.5fms, speedup x%.1f\n", cTime/nCalls*1000, standardTime/cTime);
-    fprintf("CUDA   time: %.5fms, speedup x%.1f\n", cudaTime/nCalls*1000, standardTime/cudaTime);
+    fprintf("CUDA   time: %.5fms, speedup x%.1f x%.1f\n", cudaTime/nCalls*1000, standardTime/cudaTime, cTime/cudaTime);
     
     % Force graphics update so psi_final is displayed
     if gfxSteps > 0
