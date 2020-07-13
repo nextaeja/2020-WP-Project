@@ -1,8 +1,15 @@
+#define LINUX_PROFILE
+
 #include <math.h>
 #include <matrix.h>
 #include <mex.h>
 #include <string.h>     // Needed for memcpy()
 
+#ifdef LINUX_PROFILE
+#include <time.h>  // Only for linux, profiling purposes
+#endif
+
+size_t const THREADS_PER_BLOCK = 16;
 
 // Evaluate the morse potential for a single value of z
 __device__ inline double morse_potential(double z, double wellDepth, double wellMinZPt, double a) {
@@ -10,8 +17,8 @@ __device__ inline double morse_potential(double z, double wellDepth, double well
 }
 
 __device__ inline double gaussian_fun(double x, double y, double ads_x, double ads_y, double x_sigma, double y_sigma) {
-    double x_arg = - pow(x - ads_x, 2) / (2 * pow(x_sigma, 2));
-    double y_arg = - pow(y - ads_y, 2) / (2 * pow(y_sigma, 2));
+    double x_arg = - pow(x - ads_x, 2) / (2 * x_sigma);
+    double y_arg = - pow(y - ads_y, 2) / (2 * y_sigma);
 
     return exp(x_arg + y_arg);
 }
@@ -71,6 +78,20 @@ __global__ void compute_potential(double *potential, double *z_offset, size_t nx
     potential[idx] = morse_potential(z, wellDepth, wellMinZPt, a);
 }
 
+#ifdef LINUX_PROFILE
+struct timespec start, end;
+void start_time() {
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
+}
+
+double us_elapsed() {
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+    double time_taken;
+    time_taken = (end.tv_sec - start.tv_sec) * 1e9;
+    return (time_taken + (end.tv_nsec - start.tv_nsec)) * 1e-6;
+}
+#endif
+
 /*
  *  Entry point for the C version of SetupDynamicGaussianPotential
  */
@@ -92,15 +113,27 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     size_t ny = mxGetScalar(prhs[13]);
     size_t nz = mxGetScalar(prhs[14]);
 
+#ifdef LINUX_PROFILE
+    double *timing;
+    const mwSize time_size[] = {6};
+    plhs[1] = mxCreateNumericArray(1, time_size, mxDOUBLE_CLASS, mxREAL);
+    timing = (double *) mxGetPr(plhs[1]);
+#endif
+
     // Setup helper variables
     double wellMinZPt = 2*A;
     double zCharacteristic = (1/2.06)*A;
     double Vmax = wellDepth*exp(wellMinZPt/zCharacteristic);
     double a = (1/wellMinZPt)*log(1+sqrt(1+(Vmax/wellDepth)));
+    xSigma = pow(xSigma, 2.0);
+    ySigma = pow(ySigma, 2.0);
 
     // Extract the number of adsorbates
     const int adsorbate_num = mxGetM(prhs[6]);
 
+#ifdef LINUX_PROFILE
+    start_time();
+#endif
     // Copy the adsorbate position in GPU
     cudaMalloc((void**) &dev_x0, adsorbate_num * sizeof(double));
     cudaMalloc((void**) &dev_y0, adsorbate_num * sizeof(double));
@@ -120,28 +153,66 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     // Allocate a 2D grid for z offsets and xy grid
     double *z_offset;
     cudaMalloc((void**) &z_offset, nx * ny * sizeof(double));
+#ifdef LINUX_PROFILE
+    timing[0] = us_elapsed();
+#endif
 
     // Initialize potential to zero
     //initialize_potential<<<128, 128>>>(potential, data_length);
 
+#ifdef LINUX_PROFILE
+    start_time();
+#endif
     // Compute the z offset
-    dim3 dimBlock(1, 1);
-    dim3 dimGrid_xy(nx, ny);
-    compute_z_offset<<<dimGrid_xy, dimBlock>>>(z_offset, nx, ny, dx, dy, dev_x0, dev_y0, adsorbate_num, xSigma, ySigma, gaussPeakVal);
+    int blocks_x = (nx + THREADS_PER_BLOCK - 1) /  THREADS_PER_BLOCK;
+    int blocks_y = (ny + THREADS_PER_BLOCK - 1) /  THREADS_PER_BLOCK;
+    dim3 dimBlock_xy(blocks_x, blocks_y);
+    dim3 dimThread(THREADS_PER_BLOCK, THREADS_PER_BLOCK);
+    compute_z_offset<<<dimBlock_xy, dimThread>>>(z_offset, nx, ny, dx, dy, dev_x0, dev_y0, adsorbate_num, xSigma, ySigma, gaussPeakVal);
+#ifdef LINUX_PROFILE
+    timing[1] = us_elapsed();
+#endif
 
+#ifdef LINUX_PROFILE
+    start_time();
+#endif
     // Compute the 3d potential
-    dim3 dimGrid_3d(nx*ny, nz);
-    compute_potential<<<dimGrid_3d, dimBlock>>>(potential, z_offset, nx, ny, nz, dz, wellDepth, wellMinZPt, a);
+    int blocks_xy = (nx*ny + THREADS_PER_BLOCK - 1) /  THREADS_PER_BLOCK;
+    int blocks_z = (nz + THREADS_PER_BLOCK - 1) /  THREADS_PER_BLOCK;
+    dim3 dimBlock_3d(blocks_xy, blocks_z);
+    compute_potential<<<dimBlock_3d, dimThread>>>(potential, z_offset, nx, ny, nz, dz, wellDepth, wellMinZPt, a);
+#ifdef LINUX_PROFILE
+    timing[2] = us_elapsed();
+#endif
 
+#ifdef LINUX_PROFILE
+    start_time();
+#endif
     // Create a 3D array of doubles of dimensions [nx, ny, nz] for the computed potential
     double *final_potential;
     plhs[0] = mxCreateNumericArray(3, potential_dims, mxDOUBLE_CLASS, mxREAL);
     final_potential = (double *) mxGetPr(plhs[0]);
+#ifdef LINUX_PROFILE
+    timing[3] = us_elapsed();
+#endif
 
     // Copy the computed array into the MATLAB one
+#ifdef LINUX_PROFILE
+    start_time();
+#endif
     cudaMemcpy(final_potential, potential, data_length * sizeof(double), cudaMemcpyDeviceToHost);
+#ifdef LINUX_PROFILE
+    timing[4] = us_elapsed();
+#endif
+
+#ifdef LINUX_PROFILE
+    start_time();
+#endif
     cudaFree(potential);
     cudaFree(z_offset);
     cudaFree((void *) dev_x0);
     cudaFree((void *) dev_y0);
+#ifdef LINUX_PROFILE
+    timing[5] = us_elapsed();
+#endif
 }

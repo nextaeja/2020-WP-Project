@@ -20,7 +20,13 @@ function UpdateBrownianMotionGaussians(decayType, inParameterIfNeeded, xSigmaIn,
     
     % Run the cuda function
     tic
-    cuda_potential = cuda_setup_dynamic_potential_2(decayType, inParameterIfNeeded, xSigmaIn, ySigmaIn, gaussPeakValIn, wellDepthIn, x0, y0, dx, dy, dz, A, nx, ny, nz);
+    [cuda_potential, timing] = cuda_setup_dynamic_potential_2(decayType, inParameterIfNeeded, xSigmaIn, ySigmaIn, gaussPeakValIn, wellDepthIn, x0, y0, dx, dy, dz, A, nx, ny, nz);
+    mallocTime = mallocTime + timing(1);
+    offsetTime = offsetTime + timing(2);
+    compTime = compTime + timing(3);
+    arrayTime = arrayTime + timing(4);
+    copyTime = copyTime + timing(5);
+    cleanTime = cleanTime + timing(6);
     cudaTime = cudaTime + toc;
         
     % Check for correctness

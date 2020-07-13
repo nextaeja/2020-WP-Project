@@ -75,9 +75,14 @@ function WavepacketPropagation_beta4_2
     standardTime = 0.0;
     cudaTime = 0.0;
     nCalls = 0;
-    
+    mallocTime = 0;
+    offsetTime = 0;
+    compTime = 0;
+    cleanTime = 0;
+    arrayTime = 0;
+    copyTime = 0;  
 
-    numAdsorbates = 30;
+    numAdsorbates = 1;
     
     custompaths= true;
     pathfile="brownianpaths.txt";
@@ -165,8 +170,8 @@ function WavepacketPropagation_beta4_2
             % Notify user if necessary. it - 1 as step is NOT complete yet. it - 1 is complete.
             if notifySteps > 0 && mod(it - 1, notifySteps)== 0
                 fprintf(1, 'Step %d complete (%.3f ps, %.3f s): propagate wpkt (unitarity %.7f)\n', it - 1, t/ps, toc, totProb);
-                fprintf("  MATLAB time: %.5fms\n", standardTime/nCalls*1000);
-                fprintf("  C      time: %.5fms, speedup x%.1f\n", cTime/nCalls*1000, standardTime/cTime);
+                %fprintf("  MATLAB time: %.5fms\n", standardTime/nCalls*1000);
+                %fprintf("  C      time: %.5fms, speedup x%.1f\n", cTime/nCalls*1000, standardTime/cTime);
                 fprintf("  CUDA   time: %.5fms, speedup x%.1f x%.1f\n", cudaTime/nCalls*1000, standardTime/cudaTime, cTime/cudaTime);
             end
             
@@ -207,9 +212,17 @@ function WavepacketPropagation_beta4_2
     % Tell user run is complete
     % Note, finalIteration = it - 1 as it starts counting at 1. t starts at 0 though, and t represents the time just after the last iteration, so tFinal = t
     fprintf('Run Complete.\nNumber of iterations = %d\nFinal simulation time = %.16e\n', it - 1, t);
-    fprintf("MATLAB time: %.5fms\n", standardTime/nCalls*1000);
-    fprintf("C      time: %.5fms, speedup x%.1f\n", cTime/nCalls*1000, standardTime/cTime);
-    fprintf("CUDA   time: %.5fms, speedup x%.1f x%.1f\n", cudaTime/nCalls*1000, standardTime/cudaTime, cTime/cudaTime);
+    %fprintf("MATLAB time: %.5fms\n", standardTime/nCalls*1000);
+    %fprintf("C      time: %.5fms, speedup x%.1f\n", cTime/nCalls*1000, standardTime/cTime);
+    %fprintf("CUDA   time: %.5fms, speedup x%.1f x%.1f\n", cudaTime/nCalls*1000, standardTime/cudaTime, cTime/cudaTime);
+    
+    totTime = mallocTime + offsetTime + compTime + arrayTime + copyTime + cleanTime;
+    fprintf("Malloc: %f us %.2f%%\n", mallocTime, mallocTime/totTime*100);
+    fprintf("Z offset: %f us %.2f%%\n", offsetTime, offsetTime/totTime*100);
+    fprintf("Computation: %f us %.2f%%\n", compTime, compTime/totTime*100);
+    fprintf("Output creation: %f us %.2f%%\n", arrayTime, arrayTime/totTime*100);
+    fprintf("Copy: %f us %.2f%%\n", copyTime, copyTime/totTime*100);
+    fprintf("Cleanup: %f us %.2f%%\n", cleanTime, cleanTime/totTime*100);
     
     % Force graphics update so psi_final is displayed
     if gfxSteps > 0
