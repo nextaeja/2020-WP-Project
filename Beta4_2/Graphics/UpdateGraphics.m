@@ -21,6 +21,7 @@ function UpdateGraphics(currentTime, itNumCompleted) % itNum == Iteration Number
         psiFTScaleFactor = 1/max(abs(psi0FT(xToPlot, yToPlot, :)));
         
         %figure('units','normalized','outerposition',[0 0 1 1])
+        figure('visible','off')
         
         if ny == 1
             % 1D:
@@ -173,7 +174,7 @@ function UpdateGraphics(currentTime, itNumCompleted) % itNum == Iteration Number
             
             
             % Add time and step number to plot title. Use super title (suptitle)
-            suptitle(['Time: ' num2str(currentTime, '%.16e') '. Step ' num2str(itNumCompleted) ' completed']);
+%            suptitle(['Time: ' num2str(currentTime, '%.16e') '. Step ' num2str(itNumCompleted) ' completed']);
             
         end
     end

@@ -24,12 +24,17 @@ function WavepacketPropagation_beta4_2
 %===SET=UP=VARIABLES====================================================================================%
     global A ps eV nx ny nz lx ly lz eps tStart tFinish notifySteps gfxSteps psi psi0 dt0 dt savingSimulationRunning savingDirectory propagationMethod numAdsorbates decayType
     
-    SetupSIUnits();
+    SI = SIUnits;
+    sp = SimulationParameters(sp);
+    figure('visible','off')
     
+    %% Planning to remove all of these global variables in future versions
+    % to improve code robustness
+    SetupSIUnits();  
     % Setup lengths. Units = m
-    lx = 90*A;
-    ly = 90*A;
-    lz = 90*A;
+    lx = 90*SI.A;
+    ly = 90*SI.A;
+    lz = 90*SI.A;
     
     % Setup grid - use powers of 2 for quickest FFT
     nx = 64;
@@ -48,6 +53,7 @@ function WavepacketPropagation_beta4_2
     savingSimulationEnd = false;
     realTimePlotting = true;
     displayAdsorbateAnimation = false;
+    
 
     numPsiToSave = 5;
     numGfxToSave = 20;
@@ -66,26 +72,30 @@ function WavepacketPropagation_beta4_2
     % split, time dependent.
     propagationMethod = 5;
     
-    SetupVariables();
-    
+    SetupVariables(sp);
 
     numAdsorbates = 30;
     
     tFinish=tFinish+dt0; %%%NaN bug
     
-    SetupBrownianMotionGaussians(displayAdsorbateAnimation, realTimePlotting);%%%NaN bug caused by something in here %%% 
-
-   
+    
     %SetupZeroPotential();
     %SetupWedgePotential();
-    decayType = 2; % 1 = exponential repulsive. 2 = Morse attractive. 3 = Morse-like (needs alpha parameter input too!)
+    decayType = 3; % 1 = exponential repulsive. 2 = Morse attractive. 3 = Morse-like (needs alpha parameter input too!)
     alpha = 2; % Only needed for Morse-like potential. alpha = 2 gives Morse potential. alpha = 0 gives exponential potential.
     xSigma = 3*(5.50/6)*A;       % x standard deviation
     ySigma = 3*(5.50/6)*A;       % y standard deviation
     gaussPeakVal = 3*1.61*A;   % peak value of Gaussian
     wellDepth = 10e-3*eV;
-    UpdateBrownianMotionGaussians(decayType, alpha, xSigma, ySigma, gaussPeakVal, wellDepth, tStart);
-    %SetupStaticGaussianPotential(decayType, alpha, xSigma, ySigma, gaussPeakVal, wellDepth);
+    
+    % The section above will be deleted in future versions
+    
+    %%
+    SetupBrownianMotionGaussians(sp.displayAdsorbateAnimation, sp.realTimePlotting);%%%NaN bug caused by something in here %%% 
+
+   
+    UpdateBrownianMotionGaussians(sp.decayType, sp.alpha, sp.xSigma, sp.ySigma, sp.gaussPeakVal, sp.wellDepth, sp.tStart);
+    %SetupStaticGaussianPotential(sp.decayType, sp.alpha, sp.xSigma, sp.ySigma, sp.gaussPeakVal, sp.wellDepth);
 
     % Initialises psi0
     SetupInitialWavefunction();
@@ -98,7 +108,7 @@ function WavepacketPropagation_beta4_2
 %===SAVING=RESULTS=====================================================================================%
     % Variable dictating whether simulation saved in 'Simulations' folder
     % or not 
-    savingDirectory = strcat(pwd,'\SavedSimulation');
+    savingDirectory = strcat(pwd,'/SavedSimulation');
     
     % Create unique simulation folder to store results
     if(savingSimulationRunning || savingSimulationEnd)
