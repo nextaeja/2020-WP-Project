@@ -5,7 +5,7 @@
 % lpkt (packet length) is taken to = +-5sigma, i.e. lpkt = 10sigma.
 % The gaussian is placed so that its centre is lpkt/2 away from the end of the confining box (lpkt/2 in from lz).
 %
-function psi = InitialiseGaussianWavefunction3D()
+function psi = InitialiseGaussianWavefunction3D(sp)
     global nx ny nz sigmaForward sigmaPerp psix0 psiy0 psiz0; % Needed in function
     
     % For plane wave
@@ -14,7 +14,7 @@ function psi = InitialiseGaussianWavefunction3D()
     % For gaussian - k0 = k (~momentum) normalised to 1. k1 and k2 are perpendicular to k0.
     [k0x3D, k0y3D, k0z3D, k1x3D, k1y3D, k1z3D, k2x3D, k2y3D, k2z3D] = Setupk0k1k2();
     
-    psix03D(1:nx, 1:ny, 1:nz) = psix0;
+    psix03D(1:sp.nx, 1:ny, 1:nz) = psix0;
     psiy03D(1:nx, 1:ny, 1:nz) = psiy0;
     psiz03D(1:nx, 1:ny, 1:nz) = psiz0;
     
