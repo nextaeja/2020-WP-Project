@@ -11,7 +11,7 @@ function UpdateBrownianMotionGaussians(decayType, inParameterIfNeeded, xSigmaIn,
     tic
     SetupDynamicGaussianPotential_mex(decayType, inParameterIfNeeded, xSigmaIn, ySigmaIn, gaussPeakValIn, wellDepthIn, x0, y0)
     standardTime = standardTime + toc;
-    correctV = V
+    correctV = V;
     
     % Run the rewritten function
     tic
@@ -21,7 +21,7 @@ function UpdateBrownianMotionGaussians(decayType, inParameterIfNeeded, xSigmaIn,
     % Run the cuda function
     tic
     [cuda_potential, pointers] = cuda_setup_dynamic_potential_2(decayType, inParameterIfNeeded, xSigmaIn, ySigmaIn, gaussPeakValIn, wellDepthIn, x0, y0, dx, dy, dz, A, nx, ny, nz);
-    print_potential(pointers(1), nx, ny, nz);
+    cudaTime = cudaTime + toc;
     
     % These are pointers to the static variables allocated by cuda_setup_dynamic_potential_2
     % Need to be freed later on
@@ -37,5 +37,4 @@ function UpdateBrownianMotionGaussians(decayType, inParameterIfNeeded, xSigmaIn,
     assert(sum(sum(sum(abs(correctV-cuda_potential) > tolerance))) == 0);
     
     nCalls = nCalls + 1;
-    error('ciao');
 end
