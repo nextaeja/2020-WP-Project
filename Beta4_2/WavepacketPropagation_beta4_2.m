@@ -32,10 +32,11 @@ function WavepacketPropagation_beta4_2
     lz = 90*A;
     
     % Setup grid - use powers of 2 for quickest FFT
-    nx = 128;
-    ny = 128;
-    nz = 256;
-    
+    nx = 8;
+    ny = 4;
+    nz = 2;
+    all_pointers = 0;
+        
     % Acceptable error in wavepacket norm
     eps = 1e-6;
     
@@ -233,4 +234,7 @@ function WavepacketPropagation_beta4_2
     if(savingSimulationRunning || savingSimulationEnd)
        SaveSimulationEndData(t, it - 1);
     end
+    
+    % Free previously allocated memory in MEX files
+    free_array(0, size(all_pointers, 2), [], all_pointers);
 end

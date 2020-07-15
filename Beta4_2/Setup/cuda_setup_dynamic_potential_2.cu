@@ -5,6 +5,8 @@
 #include <mex.h>
 #include <string.h>     // Needed for memcpy()
 
+#include "helper.h"
+
 #ifdef LINUX_PROFILE
 #include <time.h>  // Only for linux, profiling purposes
 #endif
@@ -40,7 +42,7 @@ __global__ void initialize_potential(double *potential, size_t data_length) {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
 
     while (tid < data_length) {
-        potential[tid] = 0.0;
+        potential[tid] = 42.0;
         tid += blockDim.x * gridDim.x;
     }
 }
@@ -103,8 +105,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     double ySigma = mxGetScalar(prhs[3]);
     double gaussPeakVal = mxGetScalar(prhs[4]);
     double wellDepth = mxGetScalar(prhs[5]);
-    double *x0 = mxGetPr(prhs[6]), *dev_x0;
-    double *y0 = mxGetPr(prhs[7]), *dev_y0;
+    double *x0 = mxGetPr(prhs[6]);
+    double *y0 = mxGetPr(prhs[7]);
     double dx = mxGetScalar(prhs[8]);
     double dy = mxGetScalar(prhs[9]);
     double dz = mxGetScalar(prhs[10]);
@@ -112,13 +114,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     size_t nx = mxGetScalar(prhs[12]);
     size_t ny = mxGetScalar(prhs[13]);
     size_t nz = mxGetScalar(prhs[14]);
-
-#ifdef LINUX_PROFILE
-    double *timing;
-    const mwSize time_size[] = {6};
-    plhs[1] = mxCreateNumericArray(1, time_size, mxDOUBLE_CLASS, mxREAL);
-    timing = (double *) mxGetPr(plhs[1]);
-#endif
 
     // Setup helper variables
     double wellMinZPt = 2*A;
@@ -131,88 +126,85 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     // Extract the number of adsorbates
     const int adsorbate_num = mxGetM(prhs[6]);
 
-#ifdef LINUX_PROFILE
-    start_time();
-#endif
-    // Copy the adsorbate position in GPU
-    cudaMalloc((void**) &dev_x0, adsorbate_num * sizeof(double));
-    cudaMalloc((void**) &dev_y0, adsorbate_num * sizeof(double));
-    cudaMemcpy((void *) dev_x0, (void *) x0, adsorbate_num * sizeof(double), cudaMemcpyHostToDevice);
-    cudaMemcpy((void *) dev_y0, (void *) y0, adsorbate_num * sizeof(double), cudaMemcpyHostToDevice);
-
     // Setup the number of dimensions in the output array
     const mwSize potential_dims[] = {nx, ny, nz};
     size_t data_length = nx * ny * nz;
 
-    // Allocate a block of memory in the GPU to save the potential in
-    double *potential;
-    cudaMalloc((void**) &potential, data_length * sizeof(double));
-    // TODO add an error check for bad allocation
-    // TODO check out cudaMalloc3D
+    /*
+     * Pointers to the 3d array to store the potential in and the z offsets
+     * Declared static so the memory is only allocated once every MATLAB session
+     *  instead of every function execution. This should reduce the runtime.
+     * The algorithm overwrites every cell in the potential, so initializing to zero
+     *  at startup is not needed.
+     */
+    static double *potential=NULL;
+    static double *z_offset=NULL;
+    static double *dev_x0=NULL;
+    static double *dev_y0=NULL;
 
-    // Allocate a 2D grid for z offsets and xy grid
-    double *z_offset;
-    cudaMalloc((void**) &z_offset, nx * ny * sizeof(double));
+    // If running for the first time in session allocate the array
+    if (potential == NULL) {
+        cudaMallocManaged(&potential, data_length * sizeof(double));
+        // TODO add an error check for bad allocation
+    }
+    if (z_offset == NULL) {
+        cudaMallocManaged((void**) &z_offset, nx * ny * sizeof(double));
+    }
+    if (dev_x0 == NULL) {
+        cudaMallocManaged((void**) &dev_x0, adsorbate_num * sizeof(double));
+    }
+    if (dev_y0 == NULL) {
+        cudaMallocManaged((void**) &dev_y0, adsorbate_num * sizeof(double));
+    }
+
+    // Copy the adsorbate position in GPU
+    cudaMemcpy((void *) dev_x0, (void *) x0, adsorbate_num * sizeof(double), cudaMemcpyHostToDevice);
+    cudaMemcpy((void *) dev_y0, (void *) y0, adsorbate_num * sizeof(double), cudaMemcpyHostToDevice);
+
+
 #ifdef LINUX_PROFILE
-    timing[0] = us_elapsed();
+    double *timing;
+    const mwSize time_size[] = {6};
+    plhs[1] = mxCreateNumericArray(1, time_size, mxDOUBLE_CLASS, mxREAL);
+    timing = (double *) mxGetPr(plhs[1]);
 #endif
-
-    // Initialize potential to zero
-    //initialize_potential<<<128, 128>>>(potential, data_length);
 
 #ifdef LINUX_PROFILE
     start_time();
 #endif
+#ifdef LINUX_PROFILE
+    timing[0] = us_elapsed();
+#endif
+
     // Compute the z offset
     int blocks_x = (nx + THREADS_PER_BLOCK - 1) /  THREADS_PER_BLOCK;
     int blocks_y = (ny + THREADS_PER_BLOCK - 1) /  THREADS_PER_BLOCK;
     dim3 dimBlock_xy(blocks_x, blocks_y);
     dim3 dimThread(THREADS_PER_BLOCK, THREADS_PER_BLOCK);
     compute_z_offset<<<dimBlock_xy, dimThread>>>(z_offset, nx, ny, dx, dy, dev_x0, dev_y0, adsorbate_num, xSigma, ySigma, gaussPeakVal);
-#ifdef LINUX_PROFILE
-    timing[1] = us_elapsed();
-#endif
 
-#ifdef LINUX_PROFILE
-    start_time();
-#endif
     // Compute the 3d potential
     int blocks_xy = (nx*ny + THREADS_PER_BLOCK - 1) /  THREADS_PER_BLOCK;
     int blocks_z = (nz + THREADS_PER_BLOCK - 1) /  THREADS_PER_BLOCK;
     dim3 dimBlock_3d(blocks_xy, blocks_z);
     compute_potential<<<dimBlock_3d, dimThread>>>(potential, z_offset, nx, ny, nz, dz, wellDepth, wellMinZPt, a);
-#ifdef LINUX_PROFILE
-    timing[2] = us_elapsed();
-#endif
 
-#ifdef LINUX_PROFILE
-    start_time();
-#endif
     // Create a 3D array of doubles of dimensions [nx, ny, nz] for the computed potential
     double *final_potential;
     plhs[0] = mxCreateNumericArray(3, potential_dims, mxDOUBLE_CLASS, mxREAL);
     final_potential = (double *) mxGetPr(plhs[0]);
-#ifdef LINUX_PROFILE
-    timing[3] = us_elapsed();
-#endif
 
     // Copy the computed array into the MATLAB one
-#ifdef LINUX_PROFILE
-    start_time();
-#endif
     cudaMemcpy(final_potential, potential, data_length * sizeof(double), cudaMemcpyDeviceToHost);
-#ifdef LINUX_PROFILE
-    timing[4] = us_elapsed();
-#endif
 
-#ifdef LINUX_PROFILE
-    start_time();
-#endif
-    cudaFree(potential);
-    cudaFree(z_offset);
-    cudaFree((void *) dev_x0);
-    cudaFree((void *) dev_y0);
-#ifdef LINUX_PROFILE
-    timing[5] = us_elapsed();
-#endif
+    // Create output variables to store the pointers to the potentials and avoid memory leaks
+    plhs[1] = mxCreateNumericMatrix(1, 4, mxINT64_CLASS, mxREAL);
+    long long *all_potentials = (long long *) mxGetPr(plhs[1]);
+
+    // Set the union to the value of the pointer and the return array to the correesponding
+    // integer value.
+    all_potentials[0] = pointer_to_int(potential);
+    all_potentials[1] = pointer_to_int(z_offset);
+    all_potentials[2] = pointer_to_int(dev_x0);
+    all_potentials[3] = pointer_to_int(dev_y0);
 }

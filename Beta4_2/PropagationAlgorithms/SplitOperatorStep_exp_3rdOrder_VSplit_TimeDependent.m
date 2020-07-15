@@ -1,7 +1,7 @@
 % Split Operator - O(dt^3) - V split
 % TODO: Update for time varying V
 function psiStepped = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t)
-    global psi V mass hBar kSquared dt decayType A eV ps ;
+    global psi V mass hBar kSquared dt decayType A eV ps;
    
     %decayType = 2; %%% 1 = exponential repulsive. 2 = Morse attractive. 3 = Morse-like (needs alpha parameter input too!)
     alpha = 2; % Only needed for Morse-like potential. alpha = 2 gives Morse potential. alpha = 0 gives exponential potential.
