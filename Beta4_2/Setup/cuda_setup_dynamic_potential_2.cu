@@ -6,12 +6,11 @@
 #include <string.h>     // Needed for memcpy()
 
 #include "helper.h"
+#include "../MEX_helpers/cuda_helper.h"
 
 #ifdef LINUX_PROFILE
 #include <time.h>  // Only for linux, profiling purposes
 #endif
-
-size_t const THREADS_PER_BLOCK = 16;
 
 // Evaluate the morse potential for a single value of z
 __device__ inline double morse_potential(double z, double wellDepth, double wellMinZPt, double a) {

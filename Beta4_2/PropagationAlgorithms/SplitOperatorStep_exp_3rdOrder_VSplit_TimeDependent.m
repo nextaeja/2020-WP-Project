@@ -1,7 +1,7 @@
 % Split Operator - O(dt^3) - V split
 % TODO: Update for time varying V
-function psiStepped = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t)
-    global psi V mass hBar kSquared dt decayType A eV ps all_pointers nx ny nz;
+function psiStepped = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t, expK)
+    global psi V mass hBar kSquared dt decayType A eV ps nx ny nz;
    
     %decayType = 2; %%% 1 = exponential repulsive. 2 = Morse attractive. 3 = Morse-like (needs alpha parameter input too!)
     alpha = 2; % Only needed for Morse-like potential. alpha = 2 gives Morse potential. alpha = 0 gives exponential potential.
@@ -16,10 +16,6 @@ function psiStepped = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t)
     expV = exp((-1i*(dt/2)/hBar)*V);
     
     cuda_expV = potential_propagation(all_pointers(1), nx, ny, nz, dt, hBar);
-    all_pointers = [all_pointers, cuda_expV]
-    
-    expK = exp((-1i*dt/hBar)*(-hBar^2*-kSquared/(2*mass)));
-    error('ciao');
     
     psiVStepHalf = expV.*psi;
     psiVStepHalfFT = fftn(psiVStepHalf);

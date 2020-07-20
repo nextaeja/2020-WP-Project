@@ -25,7 +25,7 @@ function UpdateBrownianMotionGaussians(decayType, inParameterIfNeeded, xSigmaIn,
     
     % These are pointers to the static variables allocated by cuda_setup_dynamic_potential_2
     % Need to be freed later on
-    all_pointers = pointers;
+    all_pointers = [all_pointers, pointers];
         
     % Check for correctness
     assert(isequal(size(correctV), size(c_potential)));
