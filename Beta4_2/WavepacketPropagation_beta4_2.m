@@ -25,8 +25,8 @@ function WavepacketPropagation_beta4_2
     global A ps eV nx ny nz lx ly lz eps tStart tFinish notifySteps gfxSteps psi psi0 dt0 dt savingSimulationRunning savingDirectory propagationMethod numAdsorbates decayType
     
     SI = SIUnits;
-    sp = SimulationParameters(sp);
-    figure('visible','off')
+    sp = SimulationParameters();
+    % figure('visible','off')
     
     %% Planning to remove all of these global variables in future versions
     % to improve code robustness
@@ -49,8 +49,8 @@ function WavepacketPropagation_beta4_2
     tStart = 0*ps;      % Units = s
     tFinish = 12*ps;    % Units = s
         
-    savingSimulationRunning = false;
-    savingSimulationEnd = false;
+    savingSimulationRunning = true;
+    savingSimulationEnd = true;
     realTimePlotting = true;
     displayAdsorbateAnimation = false;
     
@@ -72,7 +72,7 @@ function WavepacketPropagation_beta4_2
     % split, time dependent.
     propagationMethod = 5;
     
-    SetupVariables(sp);
+    sp=SetupVariables(sp);
 
     numAdsorbates = 30;
     
@@ -93,14 +93,14 @@ function WavepacketPropagation_beta4_2
     %%
     SetupBrownianMotionGaussians(sp.displayAdsorbateAnimation, sp.realTimePlotting);%%%NaN bug caused by something in here %%% 
 
-   
-    UpdateBrownianMotionGaussians(sp.decayType, sp.alpha, sp.xSigma, sp.ySigma, sp.gaussPeakVal, sp.wellDepth, sp.tStart);
+    % returns potential
+    V=UpdateBrownianMotionGaussians(sp, sp.decayType, sp.alpha, sp.xSigma, sp.ySigma, sp.gaussPeakVal, sp.wellDepth, sp.tStart);
     %SetupStaticGaussianPotential(sp.decayType, sp.alpha, sp.xSigma, sp.ySigma, sp.gaussPeakVal, sp.wellDepth);
 
     % Initialises psi0
-    SetupInitialWavefunction();
+    wp = SetupInitialWavefunction(V,sp);
     
-    SetupGraphicsVariables();
+    gfx = SetupGraphicsVariables(sp);
 
 %===SET=UP=COMPLETE=====================================================================================%
     fprintf('Variable setup complete. Time: %.6fs.\n', toc);
@@ -111,72 +111,73 @@ function WavepacketPropagation_beta4_2
     savingDirectory = strcat(pwd,'/SavedSimulation');
     
     % Create unique simulation folder to store results
-    if(savingSimulationRunning || savingSimulationEnd)
+    if(sp.savingSimulationRunning || savingSimulationEnd)
         CreateNewSimulationFolder();
     end
     
     % Save initialisation data
-    if(savingSimulationRunning || savingSimulationEnd)
+    if(sp.savingSimulationRunning || savingSimulationEnd)
         SaveInitialisationData(alpha, xSigma, ySigma, gaussPeakVal, wellDepth, savingDirectory);
     end
     
     % Make display full screen if saving simulation and gfxSteps > 0
-    if(savingSimulationRunning && gfxSteps > 0)
+    if(sp.savingSimulationRunning && sp.gfxSteps > 0)
         figure('units','normalized','outerposition',[0 0 1 1])
     end
     
 %===RUN=SIMULATION======================================================================================%
     % Initial conditions
-    psi = psi0;
-    dt = dt0;
-    t = tStart;
+    wp.psi = wp.psi0;
+    wp.time = sp.tStart;
+    psi = wp.psi;
+    dt = sp.dt;
+    t = wp.time;
    
     
     % it = iteration. Starts at 1, represents the iteration CURRENTLY being carried out.
     it = 1;
     
     % Use integers for loop equality test. CARE: round will give you closest # to tFinish/dt and might be floor or ceiling value
-    numIterations = round(tFinish/dt)-1;
     
     
     % Loop iteratively until tFinish reached
-    while(it <= numIterations)  
+    while(it <= sp.numIterations)  
         % Total probability
-        totProb = sum(sum(sum(psi.*conj(psi))));
+        totProb = sum(sum(sum(wp.psi.*conj(wp.psi))));
         
         % Check unitarity
-        if abs(totProb - 1) > eps
+        if abs(totProb - 1) > sp.eps
             fprintf(1, 'Step %d incomplete - unitarity error caused by previous step: %d. Time (%.3f ps, %.3f s): (unitarity %.7f)\n', it, it - 1, (it - 1)*dt/ps, toc, totProb);
-            disp(['Halving timestep to dt = ' num2str(dt/2) ' UNITS and restarting.'])
+            disp(['Halving timestep to dt = ' num2str(sp.dt/2) ' UNITS and restarting.'])
             errorMessage = strcat('Unitarity error after completing ', num2str(it - 1), 'step(s) - halving timestep. New dt = ', num2str(dt/2, '%.16e'));
             PrintErrorMessage(errorMessage, false); % Don't print in terminal - already done above.
-            dt = dt/2;
-            psi = psi0;
+            sp.dt = sp.dt/2;
+            sp.psi = sp.psi0;
             it = 1;
-            t = tStart;
-            numIterations = round(tFinish/dt);
-            notifySteps = floor(numIterations/numGfxToSave);
-            gfxSteps = floor(numIterations/numGfxToSave);
-            psiSaveSteps = floor(numIterations/numPsiToSave);
+            wp.time = sp.tStart;
+            sp.numIterations = round(sp.tFinish/sp.dt);
+            sp.notifySteps = floor(sp.numIterations/sp.numGfxToSave);
+            sp.gfxSteps = floor(sp.numIterations/sp.numGfxToSave);
+            sp.psiSaveSteps = floor(sp.numIterations/sp.numPsiToSave);
             
             % All items reset. Restarting simulation.
         else
             % Notify user if necessary. it - 1 as step is NOT complete yet. it - 1 is complete.
-            if notifySteps > 0 && mod(it - 1, notifySteps)== 0
+            if sp.notifySteps > 0 && mod(it - 1, sp.notifySteps)== 0
                 fprintf(1, 'Step %d complete (%.3f ps, %.3f s): propagate wpkt (unitarity %.7f)\n', it - 1, t/ps, toc, totProb);
             end
             
             % Produce graphics if asked and if correct # of steps has passed
-            if gfxSteps > 0 && mod(it - 1, gfxSteps) == 0
-                UpdateGraphics(t, it - 1)
+            if sp.gfxSteps > 0 && mod(it - 1, sp.gfxSteps) == 0
+                UpdateGraphics(V,sp,wp,gfx,t, it - 1)
                 
-                if savingSimulationRunning
+                if sp.savingSimulationRunning
                     SaveSimulationRunning(t);
                 end
             end
             % Save psi if necessary
             if savingSimulationRunning && psiSaveSteps > 0 && mod(it - 1, psiSaveSteps) == 0
-                saveName = strcat('psi_t', num2str(t/ps), '.mat');
+                saveName = strcat('psi_t', num2str(t/SIUnits.ps), '.mat');
                 save(saveName, 'psi');
             end
             
@@ -191,10 +192,12 @@ function WavepacketPropagation_beta4_2
                 case 4
                     psi = SplitOperatorStep_exp_3rdOrder_VSplit();
                 case 5
-                    psi = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t);
+                    wp.psi = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(V,sp,wp,t);
+                    psi = wp.psi;
             end
             % Iteration it complete. t is now t + dt
-            t = t + dt;
+            wp.time = wp.time+ sp.dt;
+            t = wp.time;
             
             % Iterate counters at end. it complete, next step is it + 1
             it = it + 1;
@@ -208,7 +211,7 @@ function WavepacketPropagation_beta4_2
     
     % Force graphics update so psi_final is displayed
     if gfxSteps > 0
-        UpdateGraphics(t, it - 1)
+        UpdateGraphics(V, sp, wp, gfx, t, it-1)
     end
     
     % If saving simulation, print end data to file

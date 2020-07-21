@@ -1,25 +1,24 @@
-function SetupGraphicsVariables()
-    global nx ny nz lx ly lz dx dy dz gfxSteps; % Needed in function
-    global xScale yScale zScale kxScale kyScale kzScale; % Set in function
-    
+function gfx = SetupGraphicsVariables(sp)
+  
     % Only initialise xScale, yscale, zScale if used
-    if gfxSteps > 0
-        xScale = gpuArray(dx*(0:nx-1));
-        yScale = gpuArray(dy*(0:ny-1));
-        zScale = gpuArray(dz*(0:nz-1));
+    if sp.gfxSteps > 0
+        gfx.xScale = gpuArray(sp.dx*(0:sp.nx-1));
+        gfx.yScale = gpuArray(sp.dy*(0:sp.ny-1));
+        gfx.zScale = gpuArray(sp.dz*(0:sp.nz-1));
         
-        kxScale = (2*pi/lx)*[0:nx/2-1, 0, -nx/2+1:-1];
-        kyScale = (2*pi/ly)*[0:ny/2-1, 0, -ny/2+1:-1];    
-        kzScale = (2*pi/lz)*[0:nz/2-1, 0, -nz/2+1:-1];
+        gfx.kxScale = (2*pi/sp.lx)*[0:sp.nx/2-1, 0, -sp.nx/2+1:-1];
+        gfx.kyScale = (2*pi/sp.ly)*[0:sp.ny/2-1, 0, -sp.ny/2+1:-1];    
+        gfx.kzScale = (2*pi/sp.lz)*[0:sp.nz/2-1, 0, -sp.nz/2+1:-1];
 
     else
         % Not worth effort creating arrays if not used
-        xScale = 0;
-        yScale = 0;
-        zScale = 0;
+        % TODO: examine the design logic of the code block below
+        gfx.xScale = 0;
+        gfx.yScale = 0;
+        gfx.zScale = 0;
         
-        kxScale = 0;
-        kyScale = 0;
-        kzScale = 0;
+        gfx.kxScale = 0;
+        gfx.kyScale = 0;
+        gfx.kzScale = 0;
     end
 end

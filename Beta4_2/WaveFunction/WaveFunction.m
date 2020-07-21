@@ -11,9 +11,10 @@ classdef WaveFunction
         phi = 0;                % Phi angle of wavepacket normal
         mass = 3.0160293*SIUnits.amu;   % Units = kg
         vel = -800;             % m/s
+        psi;
 
-        psi0 = zeros(size(V), 'gpuArray');
+        psi0;
+        time;
 
-        
     end
 end

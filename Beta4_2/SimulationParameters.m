@@ -23,6 +23,11 @@ function sp = SimulationParameters()
 
         sp.numPsiToSave = 5;
         sp.numGfxToSave = 20;
+        sp.dt=sp.dt0;
+        sp.numIterations = round(sp.tFinish/sp.dt)-1;
+        sp.notifySteps = floor(sp.numIterations/sp.numGfxToSave);
+        sp.gfxSteps = floor(sp.numIterations/sp.numGfxToSave);
+        sp.psiSaveSteps = floor(sp.numIterations/sp.numPsiToSave);
 
         sp.nx = 64;
         sp.ny = 64;
