@@ -120,7 +120,6 @@ function WavepacketPropagation_beta4_2
     
     UpdateBrownianMotionGaussians(decayType, alpha, xSigma, ySigma, gaussPeakVal, wellDepth, tStart);
     %SetupStaticGaussianPotential(decayType, alpha, xSigma, ySigma, gaussPeakVal, wellDepth);
-    error('test');
 
     % Initialises psi0
     SetupInitialWavefunction();

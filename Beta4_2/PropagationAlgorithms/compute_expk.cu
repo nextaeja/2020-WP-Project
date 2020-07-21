@@ -3,22 +3,17 @@
 #include <math.h>
 
 #include "../MEX_helpers/complex.h"
-
-const int NUM_BLOCKS = 65536;
-const int NUM_THREADS = 256;
+#include "../MEX_helpers/cuda_helper.h"
 
 // Compute (-1i*dt/hBar)*(-hBar^2*-kSquared/(2*mass))
 __global__ void shift_ksquared(complex *expk, double *ksquared, complex prefactor, double h_bar, double mass, size_t size) {
 	int tid = blockIdx.x * blockDim.x + threadIdx.x;
-	int num_threads = blockDim.x * gridDim.x;
 
-	for (int i=tid; i<size; i += num_threads) {
-		expk[i] = prefactor * (h_bar*h_bar * ksquared[i] / (2*mass));
+	while (tid < size) {
+		expk[tid] = prefactor * (h_bar*h_bar * ksquared[tid] / (2*mass));
+
+		tid += blockDim.x * gridDim.x;
 	}
-}
-
-__global__ void bangalla(double *ksq) {
-	ksq[0] = 42;
 }
 
 // Compute exp((-1i*dt/hBar)*(-hBar^2*-kSquared/(2*mass)))
@@ -36,12 +31,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	complex *dev_expk = reinterpret_cast<complex *>(expk_ptr);
 	double *dev_k_squared = reinterpret_cast<double *>(k_squared_ptr);
 
-	// Copy k_squared over to GPU memory
-	/*
-	cudaMemcpy(reinterpret_cast<void **>(&dev_k_squared),
-			   reinterpret_cast<void **>(&k_squared),
-		   	   size * sizeof(double),
-		       cudaMemcpyHostToDevice);
+	// k_squared is computed in MATLAB and copied over the GPU
+	cudaMemcpy(dev_k_squared, k_squared, size * sizeof(double), cudaMemcpyHostToDevice);
 
 	// Get scaling constant (-1i*dt/hBar)
 	complex scale = -complex(0,1)*(dt / h_bar);
@@ -51,5 +42,4 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
 	// Compute the exponential
 	cexp<<<NUM_BLOCKS, NUM_THREADS>>>(dev_expk, size);
-	*/
 }

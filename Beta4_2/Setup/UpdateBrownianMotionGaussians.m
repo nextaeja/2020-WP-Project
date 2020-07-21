@@ -13,11 +13,6 @@ function UpdateBrownianMotionGaussians(decayType, inParameterIfNeeded, xSigmaIn,
     standardTime = standardTime + toc;
     correctV = V;
     
-    % Run the rewritten function
-    tic
-    c_potential = setup_dynamic_potential(decayType, inParameterIfNeeded, xSigmaIn, ySigmaIn, gaussPeakValIn, wellDepthIn, x0, y0, dx, dy, dz, A, nx, ny, nz);
-    cTime = cTime + toc;
-    
     % Run the cuda function
     tic
     [cuda_potential, pointers] = cuda_setup_dynamic_potential_2(decayType, inParameterIfNeeded, xSigmaIn, ySigmaIn, gaussPeakValIn, wellDepthIn, x0, y0, dx, dy, dz, A, nx, ny, nz);

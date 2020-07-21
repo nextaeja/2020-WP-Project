@@ -12,7 +12,7 @@ __global__ void initialize_array(double *array, size_t size) {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
 
     while (tid < size) {
-        array[tid] = 42.0;
+        array[tid] = 0.0;
 
         tid += blockDim.x * gridDim.x;
     }
@@ -22,7 +22,7 @@ __global__ void initialize_array(complex *array, size_t size) {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
 
     while (tid < size) {
-        array[tid] = complex(42.0, 42.0);
+        array[tid] = complex(0.0, 0.0);
 
         tid += blockDim.x * gridDim.x;
     }
