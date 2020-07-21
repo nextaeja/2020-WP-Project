@@ -15,21 +15,8 @@ function UpdateBrownianMotionGaussians(decayType, inParameterIfNeeded, xSigmaIn,
     
     % Run the cuda function
     tic
-    [cuda_potential, pointers] = cuda_setup_dynamic_potential_2(decayType, inParameterIfNeeded, xSigmaIn, ySigmaIn, gaussPeakValIn, wellDepthIn, x0, y0, dx, dy, dz, A, nx, ny, nz);
+    cuda_setup_dynamic_potential_2(V_ptr, z_offset_ptr, x0_ptr, y0_ptr, decayType, inParameterIfNeeded, xSigmaIn, ySigmaIn, gaussPeakValIn, wellDepthIn, x0, y0, dx, dy, dz, A, nx, ny, nz);
     cudaTime = cudaTime + toc;
-    
-    % These are pointers to the static variables allocated by cuda_setup_dynamic_potential_2
-    % Need to be freed later on
-    all_pointers = [all_pointers, pointers];
-        
-    % Check for correctness
-    assert(isequal(size(correctV), size(c_potential)));
-    assert(isequal(size(correctV), size(cuda_potential)));
-
-    tolerance = 1e-15;
-    %max(max(max(abs(correctV-cuda_potential))))
-    assert(sum(sum(sum(abs(correctV-c_potential) > tolerance))) == 0);
-    assert(sum(sum(sum(abs(correctV-cuda_potential) > tolerance))) == 0);
     
     nCalls = nCalls + 1;
 end

@@ -85,6 +85,17 @@ function WavepacketPropagation_beta4_2
     custompaths= true;
     pathfile="brownianpaths.txt";
     
+<<<<<<< HEAD
+=======
+    CUDA_pointers = SetupVariables();
+    V_ptr = CUDA_pointers(1);
+    z_offset_ptr = CUDA_pointers(2);
+    x0_ptr = CUDA_pointers(3);
+    y0_ptr = CUDA_pointers(4);
+    kSquared_ptr = CUDA_pointers(5);
+    expV_ptr = CUDA_pointers(6);
+    expK_ptr = CUDA_pointers(7);
+>>>>>>> Changed implementation of cuda_setup_dynamic_potential to use pre-allocated memory
     
     % Use integers for loop equality test. CARE: round will give you closest # to tFinish/dt and might be floor or ceiling value
     numIterations = round(tFinish/dt0);
@@ -108,6 +119,7 @@ function WavepacketPropagation_beta4_2
     gaussPeakVal = 3*1.61*A;   % peak value of Gaussian
     wellDepth = 10e-3*eV;
     
+<<<<<<< HEAD
     if decayType==4
        f=fopen(potfile,'r');
        custpot = fscanf(f,'%f'); 
@@ -119,6 +131,10 @@ function WavepacketPropagation_beta4_2
     it = 0;
     
     UpdateBrownianMotionGaussians(decayType, alpha, xSigma, ySigma, gaussPeakVal, wellDepth, tStart);
+=======
+    UpdateBrownianMotionGaussians(V_ptr, z_offset_ptr, x0_ptr, y0_ptr, decayType, alpha, xSigma, ySigma, gaussPeakVal, wellDepth, tStart);
+    
+>>>>>>> Changed implementation of cuda_setup_dynamic_potential to use pre-allocated memory
     %SetupStaticGaussianPotential(decayType, alpha, xSigma, ySigma, gaussPeakVal, wellDepth);
 
     % Initialises psi0
@@ -150,10 +166,24 @@ function WavepacketPropagation_beta4_2
     psi = psi0;
     dt = dt0;
     t = tStart;
+<<<<<<< HEAD
    
 
     it = 1;
         
+=======
+    
+    % it = iteration. Starts at 1, represents the iteration CURRENTLY being carried out.
+    it = 1;
+    
+    % Use integers for loop equality test. CARE: round will give you closest # to tFinish/dt and might be floor or ceiling value
+    numIterations = round(tFinish/dt)-1;
+    
+    % Compute the value of expK
+    % This is constant unless the value of dt is changed
+    expK = exp((-1i*dt/hBar)*(-hBar^2*-kSquared/(2*mass)));
+    compute_expk(expK_ptr, kSquared_ptr, hBar, dt, mass, kSquared, nx*ny*nz);
+>>>>>>> Changed implementation of cuda_setup_dynamic_potential to use pre-allocated memory
     
     % Loop iteratively until tFinish reached
     while(it <= numIterations)  
@@ -199,7 +229,7 @@ function WavepacketPropagation_beta4_2
                 case 4
                     psi = SplitOperatorStep_exp_3rdOrder_VSplit();
                 case 5
-                    psi = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t, expK);
+                    psi = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t, V_ptr, z_offset_ptr, x0_ptr, y0_ptr, expK);
             end
             % Iteration it complete. t is now t + dt
             t = t + dt;
