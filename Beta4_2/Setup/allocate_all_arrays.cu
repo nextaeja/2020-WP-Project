@@ -1,10 +1,32 @@
 #include <mex.h>
 #include <matrix.h>
 #include <math.h>
+#include <assert.h>
 
 #include "../MEX_helpers/complex.h"
+#include "../MEX_helpers/cuda_helper.h"
 
 #define N_POINTERS 7
+
+__global__ void initialize_array(double *array, size_t size) {
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+
+    while (tid < size) {
+        array[tid] = 42.0;
+
+        tid += blockDim.x * gridDim.x;
+    }
+}
+
+__global__ void initialize_array(complex *array, size_t size) {
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+
+    while (tid < size) {
+        array[tid] = complex(42.0, 42.0);
+
+        tid += blockDim.x * gridDim.x;
+    }
+}
 
 /*
  * Allocate memory for:
@@ -35,6 +57,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	// This data is complex
 	cudaMallocManaged(reinterpret_cast<void **>(&exp_v), nx * ny * nz * sizeof(complex));
 	cudaMallocManaged(reinterpret_cast<void **>(&exp_k), nx * ny * nz * sizeof(complex));
+
+	// Initialize all arrays
+	initialize_array<<<NUM_BLOCKS, NUM_THREADS>>>(potential, nx * ny * nz);
+	initialize_array<<<NUM_BLOCKS, NUM_THREADS>>>(z_offset, nx * ny);
+	initialize_array<<<NUM_BLOCKS, NUM_THREADS>>>(dev_x0, num_adsorbates);
+	initialize_array<<<NUM_BLOCKS, NUM_THREADS>>>(dev_y0, num_adsorbates);
+	initialize_array<<<NUM_BLOCKS, NUM_THREADS>>>(kSquared, nx * ny * nz);
+	initialize_array<<<NUM_BLOCKS, NUM_THREADS>>>(exp_v, nx * ny * nz);
+	initialize_array<<<NUM_BLOCKS, NUM_THREADS>>>(exp_k, nx * ny * nz);
 
 	plhs[0] = mxCreateNumericMatrix(1, N_POINTERS, mxINT64_CLASS, mxREAL);
 	long long *ptr_potential = (long long *) mxGetPr(plhs[0]);

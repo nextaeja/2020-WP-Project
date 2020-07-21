@@ -17,7 +17,9 @@ __global__ void shift_ksquared(complex *expk, double *ksquared, complex prefacto
 	}
 }
 
-__global__ void bangalla()
+__global__ void bangalla(double *ksq) {
+	ksq[0] = 42;
+}
 
 // Compute exp((-1i*dt/hBar)*(-hBar^2*-kSquared/(2*mass)))
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
@@ -35,6 +37,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	double *dev_k_squared = reinterpret_cast<double *>(k_squared_ptr);
 
 	// Copy k_squared over to GPU memory
+	/*
 	cudaMemcpy(reinterpret_cast<void **>(&dev_k_squared),
 			   reinterpret_cast<void **>(&k_squared),
 		   	   size * sizeof(double),
@@ -44,8 +47,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	complex scale = -complex(0,1)*(dt / h_bar);
 
 	// Compute the argument of the exponential
-	//shift_ksquared<<<NUM_BLOCKS, NUM_THREADS>>>(dev_expk, dev_k_squared, scale, h_bar, mass, size);
+	shift_ksquared<<<NUM_BLOCKS, NUM_THREADS>>>(dev_expk, dev_k_squared, scale, h_bar, mass, size);
 
 	// Compute the exponential
-	//cexp<<<NUM_BLOCKS, NUM_THREADS>>>(dev_expk, size);
+	cexp<<<NUM_BLOCKS, NUM_THREADS>>>(dev_expk, size);
+	*/
 }

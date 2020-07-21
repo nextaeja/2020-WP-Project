@@ -35,8 +35,7 @@ function WavepacketPropagation_beta4_2
     nx = 8;
     ny = 4;
     nz = 2;
-    all_pointers = 0;
-        
+    
     % Acceptable error in wavepacket norm
     eps = 1e-6;
     
@@ -68,8 +67,6 @@ function WavepacketPropagation_beta4_2
     % Propagation method: 1 = RK4Step. 2 = Split Operator O(dt^2). 3 = Split Operator O(dt^3), K split. 4 = Sp. Op. O(dt^3), V split. 5 = Sp.Op. O(dt^3), V
     % split, time dependent.
     propagationMethod = 5;
-    
-    SetupVariables();
     
     % Setup debug variables
     cTime = 0.0;
@@ -123,6 +120,7 @@ function WavepacketPropagation_beta4_2
     
     UpdateBrownianMotionGaussians(decayType, alpha, xSigma, ySigma, gaussPeakVal, wellDepth, tStart);
     %SetupStaticGaussianPotential(decayType, alpha, xSigma, ySigma, gaussPeakVal, wellDepth);
+    error('test');
 
     % Initialises psi0
     SetupInitialWavefunction();
@@ -191,6 +189,7 @@ function WavepacketPropagation_beta4_2
             end
             
 %===========STEP=FORWARD================================================================================%
+            
             switch propagationMethod
                 case 1
                     psi = RK4Step();
@@ -201,7 +200,7 @@ function WavepacketPropagation_beta4_2
                 case 4
                     psi = SplitOperatorStep_exp_3rdOrder_VSplit();
                 case 5
-                    psi = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t);
+                    psi = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t, expK);
             end
             % Iteration it complete. t is now t + dt
             t = t + dt;
@@ -236,5 +235,5 @@ function WavepacketPropagation_beta4_2
     end
     
     % Free previously allocated memory in MEX files
-    free_array(0, size(all_pointers, 2), [], all_pointers);
+    free_array(0, size(CUDA_pointers, 2), [], CUDA_pointers);
 end
