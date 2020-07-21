@@ -85,17 +85,6 @@ function WavepacketPropagation_beta4_2
     custompaths= true;
     pathfile="brownianpaths.txt";
     
-<<<<<<< HEAD
-=======
-    CUDA_pointers = SetupVariables();
-    V_ptr = CUDA_pointers(1);
-    z_offset_ptr = CUDA_pointers(2);
-    x0_ptr = CUDA_pointers(3);
-    y0_ptr = CUDA_pointers(4);
-    kSquared_ptr = CUDA_pointers(5);
-    expV_ptr = CUDA_pointers(6);
-    expK_ptr = CUDA_pointers(7);
->>>>>>> Changed implementation of cuda_setup_dynamic_potential to use pre-allocated memory
     
     % Use integers for loop equality test. CARE: round will give you closest # to tFinish/dt and might be floor or ceiling value
     numIterations = round(tFinish/dt0);
@@ -139,6 +128,9 @@ function WavepacketPropagation_beta4_2
 
     % Initialises psi0
     SetupInitialWavefunction();
+    copy_complex_array(psi_ptr, psi0, nx*ny*nz);
+    psi0;
+    %print_complex_CUDA_array(psi_ptr, nx, ny, nz);
     
     SetupGraphicsVariables();
 
@@ -229,7 +221,7 @@ function WavepacketPropagation_beta4_2
                 case 4
                     psi = SplitOperatorStep_exp_3rdOrder_VSplit();
                 case 5
-                    psi = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t, V_ptr, z_offset_ptr, x0_ptr, y0_ptr, expK);
+                    psi = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t, V_ptr, z_offset_ptr, x0_ptr, y0_ptr, expV_ptr, expK_ptr, expK);
             end
             % Iteration it complete. t is now t + dt
             t = t + dt;

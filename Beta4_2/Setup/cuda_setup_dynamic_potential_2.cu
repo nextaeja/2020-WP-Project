@@ -3,6 +3,7 @@
 #include <mex.h>
 
 #include "../MEX_helpers/cuda_helper.h"
+#include "../MEX_helpers/complex.h"
 
 // Evaluate the morse potential for a single value of z
 __device__ inline double morse_potential(double z, double wellDepth, double wellMinZPt, double a) {
@@ -48,7 +49,7 @@ __global__ void compute_z_offset(double *offsets, size_t nx, size_t ny, double d
     offsets[xy_idx] = offset;
 }
 
-__global__ void compute_potential(double *potential, double *z_offset, size_t nxy, size_t nz,
+__global__ void compute_potential(complex *potential, double *z_offset, size_t nxy, size_t nz,
         double dz, double wellDepth, double wellMinZPt, double a) {
     // Calculate the coordinate of the specific thread
     int row = blockIdx.y * blockDim.y + threadIdx.y;
@@ -59,7 +60,8 @@ __global__ void compute_potential(double *potential, double *z_offset, size_t nx
 
     double z = dz * row - z_offset[col];
 
-    potential[idx] = morse_potential(z, wellDepth, wellMinZPt, a);
+    double point_potential = morse_potential(z, wellDepth, wellMinZPt, a);
+    potential[idx] = complex(point_potential, 0);
 }
 
 /*
@@ -88,7 +90,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     size_t nz = mxGetScalar(prhs[18]);
 
     // Get the pointer to the GPU arrays allocated earlier
-    double *dev_potential = reinterpret_cast<double *>(potential_ptr);
+    complex *dev_potential = reinterpret_cast<complex *>(potential_ptr);
     double *dev_z_offset = reinterpret_cast<double *>(z_offset_ptr);
     double *dev_x0 = reinterpret_cast<double *>(x0_ptr);
     double *dev_y0 = reinterpret_cast<double *>(y0_ptr);

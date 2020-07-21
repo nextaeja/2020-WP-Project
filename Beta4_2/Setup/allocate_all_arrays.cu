@@ -6,7 +6,7 @@
 #include "../MEX_helpers/complex.h"
 #include "../MEX_helpers/cuda_helper.h"
 
-#define N_POINTERS 7
+#define N_POINTERS 8
 
 __global__ void initialize_array(double *array, size_t size) {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
@@ -39,33 +39,36 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	int num_adsorbates = mxGetScalar(prhs[3]);
 	num_adsorbates = (num_adsorbates < 1) ? 1 : num_adsorbates;
 
-	double *potential;
 	double *z_offset;
 	double *dev_x0;
 	double *dev_y0;
 	double *kSquared;
+    complex *potential;
 	complex *exp_v;
 	complex *exp_k;
+    complex *psi_ptr;
 
 	// This data is real
-	cudaMallocManaged(reinterpret_cast<void **>(&potential), nx * ny * nz * sizeof(double));
 	cudaMallocManaged(reinterpret_cast<void **>(&z_offset), nx * ny * sizeof(double));
 	cudaMallocManaged(reinterpret_cast<void **>(&dev_x0), num_adsorbates * sizeof(double));
 	cudaMallocManaged(reinterpret_cast<void **>(&dev_y0), num_adsorbates * sizeof(double));
 	cudaMallocManaged(reinterpret_cast<void **>(&kSquared), nx * ny * nz * sizeof(double));
 
 	// This data is complex
+    cudaMallocManaged(reinterpret_cast<void **>(&potential), nx * ny * nz * sizeof(complex));
 	cudaMallocManaged(reinterpret_cast<void **>(&exp_v), nx * ny * nz * sizeof(complex));
 	cudaMallocManaged(reinterpret_cast<void **>(&exp_k), nx * ny * nz * sizeof(complex));
+    cudaMallocManaged(reinterpret_cast<void **>(&psi_ptr), nx * ny * nz * sizeof(complex));
 
 	// Initialize all arrays
-	initialize_array<<<NUM_BLOCKS, NUM_THREADS>>>(potential, nx * ny * nz);
 	initialize_array<<<NUM_BLOCKS, NUM_THREADS>>>(z_offset, nx * ny);
 	initialize_array<<<NUM_BLOCKS, NUM_THREADS>>>(dev_x0, num_adsorbates);
 	initialize_array<<<NUM_BLOCKS, NUM_THREADS>>>(dev_y0, num_adsorbates);
 	initialize_array<<<NUM_BLOCKS, NUM_THREADS>>>(kSquared, nx * ny * nz);
+    initialize_array<<<NUM_BLOCKS, NUM_THREADS>>>(potential, nx * ny * nz);
 	initialize_array<<<NUM_BLOCKS, NUM_THREADS>>>(exp_v, nx * ny * nz);
 	initialize_array<<<NUM_BLOCKS, NUM_THREADS>>>(exp_k, nx * ny * nz);
+    initialize_array<<<NUM_BLOCKS, NUM_THREADS>>>(psi_ptr, nx * ny * nz);
 
 	plhs[0] = mxCreateNumericMatrix(1, N_POINTERS, mxINT64_CLASS, mxREAL);
 	long long *ptr_potential = (long long *) mxGetPr(plhs[0]);
@@ -77,4 +80,5 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	ptr_potential[4] = reinterpret_cast<long long>(kSquared);
 	ptr_potential[5] = reinterpret_cast<long long>(exp_v);
 	ptr_potential[6] = reinterpret_cast<long long>(exp_k);
+    ptr_potential[7] = reinterpret_cast<long long>(psi_ptr);
 }
