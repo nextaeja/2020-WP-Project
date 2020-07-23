@@ -32,10 +32,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	cudaMemcpy(dev_source_real, source_real, size * sizeof(double), cudaMemcpyHostToDevice);
 	cudaMemcpy(dev_source_imag, source_imag, size * sizeof(double), cudaMemcpyHostToDevice);
 
-	/*
 	copy_complex_array<<<NUM_BLOCKS, NUM_THREADS>>>(dest, dev_source_real, dev_source_imag, size);
 
 	cudaFree(dev_source_real);
 	cudaFree(dev_source_imag);
-	*/
 }

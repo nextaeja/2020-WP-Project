@@ -108,7 +108,6 @@ function WavepacketPropagation_beta4_2
     gaussPeakVal = 3*1.61*A;   % peak value of Gaussian
     wellDepth = 10e-3*eV;
     
-<<<<<<< HEAD
     if decayType==4
        f=fopen(potfile,'r');
        custpot = fscanf(f,'%f'); 
@@ -120,17 +119,14 @@ function WavepacketPropagation_beta4_2
     it = 0;
     
     UpdateBrownianMotionGaussians(decayType, alpha, xSigma, ySigma, gaussPeakVal, wellDepth, tStart);
-=======
-    UpdateBrownianMotionGaussians(V_ptr, z_offset_ptr, x0_ptr, y0_ptr, decayType, alpha, xSigma, ySigma, gaussPeakVal, wellDepth, tStart);
-    
->>>>>>> Changed implementation of cuda_setup_dynamic_potential to use pre-allocated memory
     %SetupStaticGaussianPotential(decayType, alpha, xSigma, ySigma, gaussPeakVal, wellDepth);
 
     % Initialises psi0
     SetupInitialWavefunction();
-    copy_complex_array(psi_ptr, psi0, nx*ny*nz);
-    psi0;
-    %print_complex_CUDA_array(psi_ptr, nx, ny, nz);
+    
+    % Copy the initialized function into the allocated space
+    % gather is necessary to pass a gpuArray into RAM
+    copy_complex_array(psi_ptr, gather(psi0), nx*ny*nz);
     
     SetupGraphicsVariables();
 
@@ -158,24 +154,10 @@ function WavepacketPropagation_beta4_2
     psi = psi0;
     dt = dt0;
     t = tStart;
-<<<<<<< HEAD
    
 
     it = 1;
         
-=======
-    
-    % it = iteration. Starts at 1, represents the iteration CURRENTLY being carried out.
-    it = 1;
-    
-    % Use integers for loop equality test. CARE: round will give you closest # to tFinish/dt and might be floor or ceiling value
-    numIterations = round(tFinish/dt)-1;
-    
-    % Compute the value of expK
-    % This is constant unless the value of dt is changed
-    expK = exp((-1i*dt/hBar)*(-hBar^2*-kSquared/(2*mass)));
-    compute_expk(expK_ptr, kSquared_ptr, hBar, dt, mass, kSquared, nx*ny*nz);
->>>>>>> Changed implementation of cuda_setup_dynamic_potential to use pre-allocated memory
     
     % Loop iteratively until tFinish reached
     while(it <= numIterations)  
