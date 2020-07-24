@@ -49,7 +49,7 @@ __global__ void compute_z_offset(double *offsets, size_t nx, size_t ny, double d
     offsets[xy_idx] = offset;
 }
 
-__global__ void compute_potential(complex *potential, double *z_offset, size_t nxy, size_t nz,
+__global__ void compute_potential(Complex *potential, double *z_offset, size_t nxy, size_t nz,
         double dz, double wellDepth, double wellMinZPt, double a) {
     // Calculate the coordinate of the specific thread
     int row = blockIdx.y * blockDim.y + threadIdx.y;
@@ -61,7 +61,11 @@ __global__ void compute_potential(complex *potential, double *z_offset, size_t n
     double z = dz * row - z_offset[col];
 
     double point_potential = morse_potential(z, wellDepth, wellMinZPt, a);
-    potential[idx] = complex(point_potential, 0);
+
+    Complex w;
+    w.x = point_potential;
+    w.y = 0.0;
+    potential[idx] = w;
 }
 
 /*
@@ -90,7 +94,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     size_t nz = mxGetScalar(prhs[18]);
 
     // Get the pointer to the GPU arrays allocated earlier
-    complex *dev_potential = reinterpret_cast<complex *>(potential_ptr);
+    Complex *dev_potential = reinterpret_cast<Complex *>(potential_ptr);
     double *dev_z_offset = reinterpret_cast<double *>(z_offset_ptr);
     double *dev_x0 = reinterpret_cast<double *>(x0_ptr);
     double *dev_y0 = reinterpret_cast<double *>(y0_ptr);

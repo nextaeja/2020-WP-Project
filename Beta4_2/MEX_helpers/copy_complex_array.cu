@@ -5,11 +5,14 @@
 #include "../MEX_helpers/complex.h"
 #include "../MEX_helpers/cuda_helper.h"
 
-__global__ void copy_complex_array(complex *dest, double *real, double *imag, size_t size) {
+__global__ void copy_complex_array(Complex *dest, double *real, double *imag, size_t size) {
 	int tid = blockIdx.x * blockDim.x + threadIdx.x;
 
 	while (tid < size) {
-		dest[tid] = complex(real[tid], imag[tid]);
+		Complex w;
+		w.x = real[tid];
+		w.y = imag[tid];
+		dest[tid] = w;
 
 		tid += blockDim.x * gridDim.x;
 	}
@@ -21,7 +24,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	double *source_imag = mxGetPi(prhs[1]);
 	size_t size = mxGetScalar(prhs[2]);
 
-	complex *dest = reinterpret_cast<complex *>(dest_ptr);
+	Complex *dest = reinterpret_cast<Complex *>(dest_ptr);
 
 	// Allocate the space on the GPU
 	double *dev_source_real, *dev_source_imag;
