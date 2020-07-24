@@ -22,7 +22,7 @@ function WavepacketPropagation_beta4_2
     addpath(genpath(pwd));
     
 %===SET=UP=VARIABLES====================================================================================%
-    global A ps eV nx ny nz lx ly lz eps tStart tFinish notifySteps gfxSteps psi psi0 dt0 dt savingSimulationRunning savingDirectory propagationMethod numAdsorbates decayType
+    global A ps eV nx ny nz lx ly lz eps tStart tFinish notifySteps gfxSteps psi psi0 dt0 dt savingSimulationRunning savingDirectory propagationMethod numAdsorbates decayType custpot
     
     SetupSIUnits();
     
@@ -49,8 +49,8 @@ function WavepacketPropagation_beta4_2
     realTimePlotting = true;
     displayAdsorbateAnimation = false;
 
-    numPsiToSave = 5;
-    numGfxToSave = 20;
+    numPsiToSave = 1;
+    numGfxToSave = 5;
     numSteps = round(tFinish/dt0);
     
     notifySteps = floor(numSteps/numGfxToSave);   % TODO: Change to notifytime. # steps after which to notify user of progress
@@ -78,12 +78,20 @@ function WavepacketPropagation_beta4_2
    
     %SetupZeroPotential();
     %SetupWedgePotential();
-    decayType = 2; % 1 = exponential repulsive. 2 = Morse attractive. 3 = Morse-like (needs alpha parameter input too!)
+    decayType = 4; % 1 = exponential repulsive. 2 = Morse attractive. 3 = Morse-like (needs alpha parameter input too!). 4=custom
+    potfile="potential.txt"; %for 4, text file containing floats for real and imaginary part of potential, seperated by lz  
     alpha = 2; % Only needed for Morse-like potential. alpha = 2 gives Morse potential. alpha = 0 gives exponential potential.
     xSigma = 3*(5.50/6)*A;       % x standard deviation
     ySigma = 3*(5.50/6)*A;       % y standard deviation
     gaussPeakVal = 3*1.61*A;   % peak value of Gaussian
     wellDepth = 10e-3*eV;
+    
+    if decayType==4
+       f=fopen(potfile,'r');
+       custpot = fscanf(f,'%f'); 
+       fclose(f);
+    end
+    
     UpdateBrownianMotionGaussians(decayType, alpha, xSigma, ySigma, gaussPeakVal, wellDepth, tStart);
     %SetupStaticGaussianPotential(decayType, alpha, xSigma, ySigma, gaussPeakVal, wellDepth);
 

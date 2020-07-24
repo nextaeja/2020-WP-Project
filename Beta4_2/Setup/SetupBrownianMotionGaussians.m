@@ -46,7 +46,7 @@ function SetupBrownianMotionGaussians(displayAdsorbateAnimation, realTimePlottin
     % Cyclic Boundary Conditions - make adsorbates loop back round to other side of simulation if they move past simulation boundary
     gaussianPositions(:,1,:) = mod(gaussianPositions(:,1,:), lx - dx);
     gaussianPositions(:,2,:) = mod(gaussianPositions(:,2,:), ly - dy);
-    
+    figure %%%
     for adsorbateNum = 1:numAdsorbates
         plot(squeeze(gaussianPositions(adsorbateNum, 1, :))/A, squeeze(gaussianPositions(adsorbateNum, 2, :))/A, '.', 'MarkerSize', 1);
         hold on;
