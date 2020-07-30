@@ -6,7 +6,7 @@
 % Note: parameterIfNeeded is unused for decayType 1 and 2, so should be set arbitrarily to 0
 %
 function SetupDynamicGaussianPotential(decayType, inParameterIfNeeded, xSigmaIn, ySigmaIn, gaussPeakValIn, wellDepthIn, x0, y0)
-    global nx ny nz lx ly lz dx dy dz eV A numAdsorbates custpot; % Needed in function
+    global nx ny nz lx ly lz dx dy dz eV A numAdsorbates zOffset; % Needed in function
     global V; % Set in function
     
     % Gaussian Properties
@@ -53,7 +53,6 @@ function SetupDynamicGaussianPotential(decayType, inParameterIfNeeded, xSigmaIn,
     % Create constants to pass to arrayfun GPU calculation of 1D z potential
     %Vmax = 100e-3*eV;
     zCharacteristic = (1/2.06)*A; % Vroot = pt. where V = 0 i.e. the z value where V = 0
-    zOffset = -5*A; % Shift entire V away from boundary to stop Q.Tunneling through V %%% or to make custom potential go all the way to the surface
     
     wellDepth = wellDepthIn;%10e-3*eV;
     wellMinZPt = 2*A;

@@ -22,7 +22,7 @@ function WavepacketPropagation_beta4_2
     addpath(genpath(pwd));
     
 %===SET=UP=VARIABLES====================================================================================%
-    global A ps eV nx ny nz lx ly lz eps tStart tFinish notifySteps gfxSteps psi psi0 dt0 dt savingSimulationRunning savingDirectory propagationMethod numAdsorbates decayType custpot zOffset pathfile Browniefile savingBrownianPaths
+    global A ps eV nx ny nz lx ly lz eps tStart tFinish notifySteps gfxSteps psi psi0 dt0 dt savingSimulationRunning savingDirectory propagationMethod numAdsorbates decayType custpot zOffset pathfile
     
     SetupSIUnits();
     
@@ -48,8 +48,7 @@ function WavepacketPropagation_beta4_2
     savingSimulationEnd = false;
     realTimePlotting = true;
     displayAdsorbateAnimation = false;
-    savingBrownianPaths=false;
-    Browniefile="brownianpaths.txt";
+    savingBr
     
     numPsiToSave = 1;
     numGfxToSave = 5;
@@ -75,7 +74,7 @@ function WavepacketPropagation_beta4_2
     
     %tFinish=tFinish+dt0; %%%NaN bug
     
-    custompaths= false;
+    custompaths= true;
     pathfile="paths.txt";
     
     

@@ -167,7 +167,6 @@ function UpdateGraphics(currentTime, itNumCompleted) % itNum == Iteration Number
             subplot(3,3,9);
             %imagesc(kzScale, kxScale,squeeze(abs(psiFT(:,:,floor(3*nz/4)))));
             [c,h]=contour(squeeze(abs(transpose(V(:,:,1)))));
-            
             %h.LevelStep= 10^-14;
             
             set(gca,'dataaspectratio',[1 1 1]);
