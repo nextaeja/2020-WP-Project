@@ -11,9 +11,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	int ny = mxGetScalar(prhs[2]);
 	int nz = mxGetScalar(prhs[3]);
 
-	Complex *dev_potential = reinterpret_cast<Complex *>(potential_ptr);
-	Complex *potential = reinterpret_cast<Complex *>(malloc(nx * ny * nz * sizeof(complex)));
-	cudaMemcpy(potential, dev_potential, nx * ny * nz * sizeof(complex), cudaMemcpyDeviceToHost);
+	cuComplex *dev_potential = reinterpret_cast<cuComplex *>(potential_ptr);
+	cuComplex *potential = reinterpret_cast<cuComplex *>(malloc(nx * ny * nz * sizeof(cuComplex)));
+	cudaMemcpy(potential, dev_potential, nx * ny * nz * sizeof(cuComplex), cudaMemcpyDeviceToHost);
 
 	for (int k=0; k<nz; k++) {
 		for (int i=0; i<nx; i++) {

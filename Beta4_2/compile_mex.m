@@ -1,22 +1,19 @@
 function  compile_mex()
 %COMPILE_MEX Compile all the mex functions
 
-mexcuda Setup/allocate_all_arrays.cu MEX_helpers/complex.cu
-mexcuda Setup/cuda_setup_dynamic_potential_2.cu MEX_helpers/complex.cu
-mexcuda Setup/free_array.cu Setup/helper.cu
+mexcuda Setup/allocate_all_arrays.cu MEX_helpers/complex.cu -lcuda
+mexcuda Setup/cuda_setup_dynamic_potential_2.cu MEX_helpers/complex.cu -lcuda
+mexcuda Setup/free_array.cu Setup/helper.cu -lcuda
 
-mexcuda MEX_helpers/print_CUDA_array.cu MEX_helpers/complex.cu
-mexcuda MEX_helpers/print_complex_CUDA_array.cu MEX_helpers/complex.cu
-mexcuda MEX_helpers/print_complex_CUDA_array.cu MEX_helpers/complex.cu
-mexcuda MEX_helpers/copy_complex_array.cu MEX_helpers/complex.cu
+mexcuda MEX_helpers/print_CUDA_array.cu MEX_helpers/complex.cu -lcuda
+mexcuda MEX_helpers/print_complex_CUDA_array.cu MEX_helpers/complex.cu -lcuda
+mexcuda MEX_helpers/print_complex_CUDA_array.cu MEX_helpers/complex.cu -lcuda
+mexcuda MEX_helpers/copy_complex_array.cu MEX_helpers/complex.cu -lcuda
+mexcuda MEX_helpers/cmp_complex_matlab_CUDA.cu MEX_helpers/complex.cu -lcuda
 
-mexcuda PropagationAlgorithms/compute_expk.cu MEX_helpers/complex.cu
-mexcuda PropagationAlgorithms/compute_expv.cu MEX_helpers/complex.cu
-
-%mexcuda Setup/print_complex_array.cu Setup/helper.cu MEX_helpers/complex.cu;
-%mexcuda PropagationAlgorithms/potential_propagation.cu Setup/helper.cu;
-%mex Setup/setup_dynamic_potential.c;
-%mexcuda Setup/print_potential.cu Setup/helper.cu;
+mexcuda PropagationAlgorithms/compute_expk.cu MEX_helpers/complex.cu -lcuda
+mexcuda PropagationAlgorithms/compute_expv.cu MEX_helpers/complex.cu -lcuda
+mexcuda PropagationAlgorithms/compute_fft_step.cu MEX_helpers/complex.cu -lcuda -lcufft
 
 end
 
