@@ -8,21 +8,6 @@
 
 #define NDIMS 3
 
-__global__ void swap_axes(myComplex *dev_psi, int nx, int ny, int nz) {
-	for (int k=0; k<nz; k++) {
-		for (int j=0; j<ny; j++) {
-			for (int i=0; i<nx; i++) {
-				int source_idx = i + j*nx + k*nx*ny;
-				int dest_idx = j + i*ny + k*nx*ny;
-
-				myComplex tmp = dev_psi[dest_idx];
-				dev_psi[dest_idx] = dev_psi[source_idx];
-				dev_psi[source_idx] = tmp;
-			}
-		}
-	}
-}
-
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	long long expv_ptr = mxGetScalar(prhs[0]);
 	long long expk_ptr = mxGetScalar(prhs[1]);

@@ -80,7 +80,7 @@ function WavepacketPropagation_beta4_2
     arrayTime = 0;
     copyTime = 0;  
 
-    numAdsorbates = 1;
+    numAdsorbates = 3;
     
     custompaths= true;
     pathfile="brownianpaths.txt";
