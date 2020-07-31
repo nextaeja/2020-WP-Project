@@ -3,48 +3,48 @@
 #include "complex.h"
 
 /// =============== SCALAR FUNCTIONS ===============
-__device__ cuComplex element_complex_add(cuComplex z1, cuComplex z2) {
-	cuComplex w;
+__device__ myComplex element_complex_add(myComplex z1, myComplex z2) {
+	myComplex w;
 	w.x = z1.x + z2.x;
 	w.y = z1.y + z2.y;
 
 	return w;
 }
 
-__device__ cuComplex element_complex_add(float x, cuComplex z) {
-	cuComplex w;
+__device__ myComplex element_complex_add(double x, myComplex z) {
+	myComplex w;
 	w.x = x + z.x;
 	w.y = z.y;
 
 	return w;
 }
 
-__device__ cuComplex element_complex_add(cuComplex z, float x) {
+__device__ myComplex element_complex_add(myComplex z, double x) {
 	return element_complex_add(x, z);
 }
 
-__device__ cuComplex element_complex_mul(cuComplex z1, cuComplex z2) {
-	cuComplex w;
+__device__ myComplex element_complex_mul(myComplex z1, myComplex z2) {
+	myComplex w;
 	w.x = z1.x*z2.x - z1.y*z2.y;
 	w.y = z1.x*z2.y + z1.y*z2.x;
 
 	return w;
 }
 
-__device__ cuComplex element_complex_mul(float x, cuComplex z) {
-	cuComplex w;
+__device__ myComplex element_complex_mul(double x, myComplex z) {
+	myComplex w;
 	w.x = x * z.x;
 	w.y = x * z.y;
 
 	return w;
 }
 
-__device__ cuComplex element_complex_mul(cuComplex z, float x) {
+__device__ myComplex element_complex_mul(myComplex z, double x) {
 	return element_complex_mul(x, z);
 }
 
-__device__ cuComplex element_complex_exp(cuComplex z) {
-	cuComplex w;
+__device__ myComplex element_complex_exp(myComplex z) {
+	myComplex w;
 	w.x = cos(z.y);
 	w.x = sin(z.y);
 
@@ -56,7 +56,7 @@ __device__ cuComplex element_complex_exp(cuComplex z) {
 // Scale and shift an array by real constants
 // i.e.: z --> scale*z - shift	if opposite is FALSE
 //	     z --> shift - scale*z  if opposite is TRUE
-__global__ void complex_scale_shift(cuComplex *zs, float scale, float shift, bool opposite, size_t size) {
+__global__ void complex_scale_shift(myComplex *zs, double scale, double shift, bool opposite, size_t size) {
 	int tid = blockIdx.x * blockDim.x + threadIdx.x;
 
 	while (tid < size) {
@@ -70,9 +70,21 @@ __global__ void complex_scale_shift(cuComplex *zs, float scale, float shift, boo
 	}
 }
 
+// Scale an array by real constants
+// i.e.: z --> scale*z - shift	if opposite is FALSE
+__global__ void complex_scale(myComplex *zs, double scale, size_t size) {
+	int tid = blockIdx.x * blockDim.x + threadIdx.x;
+
+	while (tid < size) {
+		zs[tid] = element_complex_mul(scale, zs[tid]);
+
+		tid += blockDim.x * gridDim.x;
+	}
+}
+
 // Compute the exponential of an array
 // 		z --> exp(z)
-__global__ void complex_exp(cuComplex *zs, size_t size) {
+__global__ void complex_exp(myComplex *zs, size_t size) {
 	int tid = blockIdx.x * blockDim.x + threadIdx.x;
 
 	while (tid < size) {
@@ -84,7 +96,7 @@ __global__ void complex_exp(cuComplex *zs, size_t size) {
 
 // Multiply two arrays elementwise
 //		(x, y) --> x*y
-__global__ void complex_mul(cuComplex *zs, cuComplex *ws, size_t size) {
+__global__ void complex_mul(myComplex *zs, myComplex *ws, size_t size) {
 	int tid = blockIdx.x * blockDim.x + threadIdx.x;
 
 	while (tid < size) {

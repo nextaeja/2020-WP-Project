@@ -8,14 +8,14 @@
 
 #define NDIMS 3
 
-__global__ void swap_axes(cuComplex *dev_psi, int nx, int ny, int nz) {
+__global__ void swap_axes(myComplex *dev_psi, int nx, int ny, int nz) {
 	for (int k=0; k<nz; k++) {
 		for (int j=0; j<ny; j++) {
 			for (int i=0; i<nx; i++) {
 				int source_idx = i + j*nx + k*nx*ny;
 				int dest_idx = j + i*ny + k*nx*ny;
 
-				cuComplex tmp = dev_psi[dest_idx];
+				myComplex tmp = dev_psi[dest_idx];
 				dev_psi[dest_idx] = dev_psi[source_idx];
 				dev_psi[source_idx] = tmp;
 			}
@@ -33,38 +33,36 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	size_t size = nx * ny * nz;
 
 	// Parse the pointers
-	cuComplex *dev_expv = reinterpret_cast<cuComplex *>(expv_ptr);
-	cuComplex *dev_expk = reinterpret_cast<cuComplex *>(expk_ptr);
-	cuComplex *dev_psi = reinterpret_cast<cuComplex *>(psi_ptr);
+	myComplex *dev_expv = reinterpret_cast<myComplex *>(expv_ptr);
+	myComplex *dev_expk = reinterpret_cast<myComplex *>(expk_ptr);
+	myComplex *dev_psi = reinterpret_cast<myComplex *>(psi_ptr);
+
+	// Plan the FFT
+	cufftHandle forward_plan, inverse_plan;
+	int n[3] = {nz, ny, nx};
+	int idist = size;
+	int odist = size;
+	int istride = 1;
+	int ostride = 1;
+	int inembed[3] = {nz, ny, nx}; // MATLAB inverts rows and columns
+	int onembed[3] = {nz, ny, nx};
+	cufftPlanMany(&forward_plan, 3, n, inembed, istride, idist, onembed, ostride, odist, CUFFT_Z2Z, 1);
+	cufftPlanMany(&inverse_plan, 3, n, onembed, ostride, odist, inembed, istride, idist, CUFFT_Z2Z, 1);
 
 	// psiVStepHalf = expV.*psi;
 	complex_mul<<<NUM_BLOCKS, NUM_THREADS>>>(dev_psi, dev_expv, size);
 	cudaDeviceSynchronize();
 
-	// Compute the FFT
-	cufftHandle plan;
-	int n[3] = {nz, nx, ny};
-	int idist = size;
-	int odist = size;
-	int istride = 1;
-	int ostride = 1;
-	int inembed[3] = {nz, nx, ny};
-	int onembed[3] = {nz, nx, ny};
-	cufftPlanMany(
-		&plan, 3, n,
-		inembed, istride, idist,
-		onembed, ostride, odist,
-		CUFFT_C2C, 1
-	);
-	cufftExecC2C(plan, dev_psi, dev_psi, CUFFT_FORWARD);
+	// Compute the forward FFT
+	cufftExecZ2Z(forward_plan, dev_psi, dev_psi, CUFFT_FORWARD);
 
-	/*
 	// psiKStepFT = expK.*psiVStepHalfFT;
 	complex_mul<<<NUM_BLOCKS, NUM_THREADS>>>(dev_psi, dev_expk, size);
 
 	// Invert FFT
-	cufftExecC2C(plan, dev_psi, dev_psi, CUFFT_INVERSE);
-	*/
+	cufftExecZ2Z(inverse_plan, dev_psi, dev_psi, CUFFT_INVERSE);
+	complex_scale<<<NUM_BLOCKS, NUM_THREADS>>>(dev_psi, 1/(double) size, size);
 
-	cufftDestroy(plan);
+	cufftDestroy(forward_plan);
+	cufftDestroy(inverse_plan);
 }

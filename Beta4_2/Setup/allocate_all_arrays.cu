@@ -18,11 +18,11 @@ __global__ void initialize_array(double *array, size_t size) {
     }
 }
 
-__global__ void initialize_array(cuComplex *array, size_t size) {
+__global__ void initialize_array(myComplex *array, size_t size) {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
 
     while (tid < size) {
-        cuComplex w;
+        myComplex w;
         w.x = 0.0;
         w.y = 0.0;
         array[tid] = w;
@@ -46,10 +46,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	double *dev_x0;
 	double *dev_y0;
 	double *kSquared;
-    cuComplex *potential;
-	cuComplex *exp_v;
-	cuComplex *exp_k;
-    cuComplex *psi_ptr;
+    myComplex *potential;
+	myComplex *exp_v;
+	myComplex *exp_k;
+    myComplex *psi_ptr;
 
 	// This data is real
 	cudaMallocManaged(reinterpret_cast<void **>(&z_offset), nx * ny * sizeof(double));
@@ -58,10 +58,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	cudaMallocManaged(reinterpret_cast<void **>(&kSquared), nx * ny * nz * sizeof(double));
 
 	// This data is complex
-    cudaMallocManaged(reinterpret_cast<void **>(&potential), nx * ny * nz * sizeof(cuComplex));
-	cudaMallocManaged(reinterpret_cast<void **>(&exp_v), nx * ny * nz * sizeof(cuComplex));
-	cudaMallocManaged(reinterpret_cast<void **>(&exp_k), nx * ny * nz * sizeof(cuComplex));
-    cudaMallocManaged(reinterpret_cast<void **>(&psi_ptr), nx * ny * nz * sizeof(cuComplex));
+    cudaMallocManaged(reinterpret_cast<void **>(&potential), nx * ny * nz * sizeof(myComplex));
+	cudaMallocManaged(reinterpret_cast<void **>(&exp_v), nx * ny * nz * sizeof(myComplex));
+	cudaMallocManaged(reinterpret_cast<void **>(&exp_k), nx * ny * nz * sizeof(myComplex));
+    cudaMallocManaged(reinterpret_cast<void **>(&psi_ptr), nx * ny * nz * sizeof(myComplex));
 
 	// Initialize all arrays
 	initialize_array<<<NUM_BLOCKS, NUM_THREADS>>>(z_offset, nx * ny);

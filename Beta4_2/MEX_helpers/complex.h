@@ -3,22 +3,23 @@
 
 #include <math.h>
 
-typedef float2 cuComplex;
+typedef double2 myComplex;
 
 // Overloaded addition
-__device__ cuComplex element_complex_add(cuComplex z1, cuComplex z2);
-__device__ cuComplex element_complex_add(float x, cuComplex z);
-__device__ cuComplex element_complex_add(cuComplex z, float x);
+__device__ myComplex element_complex_add(myComplex z1, myComplex z2);
+__device__ myComplex element_complex_add(double x, myComplex z);
+__device__ myComplex element_complex_add(myComplex z, double x);
 
 // Overloaded multiplication
-__device__ cuComplex element_complex_mul(cuComplex z1, cuComplex z2);
-__device__ cuComplex element_complex_mul(float x, cuComplex z);
-__device__ cuComplex element_complex_mul(cuComplex z, float x);
+__device__ myComplex element_complex_mul(myComplex z1, myComplex z2);
+__device__ myComplex element_complex_mul(double x, myComplex z);
+__device__ myComplex element_complex_mul(myComplex z, double x);
 
-__device__ cuComplex element_complex_exp(cuComplex z);
+__device__ myComplex element_complex_exp(myComplex z);
 
-__global__ void complex_scale_shift(cuComplex *zs, float scale, float shift, bool opposite, size_t size);
-__global__ void complex_exp(cuComplex *zs, size_t size);
-__global__ void complex_mul(cuComplex *zs, cuComplex *ws, size_t size);
+__global__ void complex_scale_shift(myComplex *zs, double scale, double shift, bool opposite, size_t size);
+__global__ void complex_scale(myComplex *zs, double scale, size_t size);
+__global__ void complex_exp(myComplex *zs, size_t size);
+__global__ void complex_mul(myComplex *zs, myComplex *ws, size_t size);
 
 #endif

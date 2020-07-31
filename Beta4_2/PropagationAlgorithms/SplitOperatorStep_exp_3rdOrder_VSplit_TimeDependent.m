@@ -19,12 +19,12 @@ function psiStepped = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t, V_p
     
     psiVStepHalf = expV.*psi;
     psiVStepHalfFT = fftn(psiVStepHalf);
-    %psiKStepFT = expK.*psiVStepHalfFT;
-    %psiKStep = ifftn(psiKStepFT);
+    psiKStepFT = expK.*psiVStepHalfFT;
+    psiKStep = ifftn(psiKStepFT);
             
     compute_fft_step(V_ptr, expK_ptr, psi_ptr, nx, ny, nz);
-    cmp_complex_matlab_CUDA(gather(psiVStepHalfFT), psi_ptr, 1e3, nx, ny, nz, 1);
-    error('test fft');
+    %print_complex_CUDA_array(psi_ptr, nx, ny, nz);
+    cmp_complex_matlab_CUDA(gather(psiKStep), psi_ptr, 1e5, nx, ny, nz, 0);
     
     %%%%TODO:INTESTIGATE%SPLITTING%TIMES-V(dt)%vs%V(dt/2)%etc...%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Update potential V to V(t + dt) - see http://phys.au.dk/fileadmin/site_files/quscope/Haru_split_operator.pdf

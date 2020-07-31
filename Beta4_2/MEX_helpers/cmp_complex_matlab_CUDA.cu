@@ -23,9 +23,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	}
 	size_t size = nx*ny*nz;
 
-	cuComplex *dev_cuda_array = reinterpret_cast<cuComplex *>(cuda_array_ptr);
-	cuComplex *cuda_array = reinterpret_cast<cuComplex *>(malloc(size * sizeof(cuComplex)));
-	cudaMemcpy(cuda_array, dev_cuda_array, size * sizeof(cuComplex), cudaMemcpyDeviceToHost);
+	myComplex *dev_cuda_array = reinterpret_cast<myComplex *>(cuda_array_ptr);
+	myComplex *cuda_array = reinterpret_cast<myComplex *>(malloc(size * sizeof(myComplex)));
+	cudaMemcpy(cuda_array, dev_cuda_array, size * sizeof(myComplex), cudaMemcpyDeviceToHost);
 
 	for (int k=0; k<nz; k++) {
 		for (int j=0; j<ny; j++) {
@@ -35,11 +35,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 				double imag_diff = abs((matlab_array_imag[idx] - cuda_array[idx].y) / matlab_array_imag[idx]);
 
 				if (debug) {
-					mexPrintf("(%d %d %d %d) (%e %e) (%e %e) (%e %e)\n", i, j, k, idx, matlab_array_real[idx], matlab_array_imag[idx], cuda_array[idx].x, cuda_array[idx].y, real_diff, imag_diff);
+					mexPrintf("(%d %d %d %d) (%e %e) (%e %e) (%.1e %.1e)\n", i, j, k, idx, matlab_array_real[idx], cuda_array[idx].x, matlab_array_imag[idx], cuda_array[idx].y, real_diff, imag_diff);
 				}
 
 				if (real_diff > epsilon || imag_diff > epsilon) {
-					mexPrintf("(%d %d %d %d) (%e %e) (%e %e) (%e %e)\n", i, j, k, idx, matlab_array_real[idx], matlab_array_imag[idx], cuda_array[idx].x, cuda_array[idx].y, real_diff, imag_diff);
+					mexPrintf("(%d %d %d %d) (%e %e) (%e %e) (%.1e %.1e)\n", i, j, k, idx, matlab_array_real[idx], cuda_array[idx].x, matlab_array_imag[idx], cuda_array[idx].y, real_diff, imag_diff);
 					mexErrMsgIdAndTxt("Wavepacket:ArrayCmp", "Arrays are not equal\n");
 				}
 			}

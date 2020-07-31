@@ -6,11 +6,11 @@
 #include "../MEX_helpers/cuda_helper.h"
 
 // Compute exp((-1i*(dt/2)/hBar)*V)
-__global__ void compute_expv(cuComplex *potential, float scale, size_t size) {
+__global__ void compute_expv(myComplex *potential, double scale, size_t size) {
 	int tid = blockIdx.x * blockDim.x + threadIdx.x;
 
 	while (tid < size) {
-		cuComplex expv;
+		myComplex expv;
 		expv.x = cos(scale * potential[tid].x);
 		expv.y = sin(scale * potential[tid].x);
 
@@ -30,10 +30,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	size_t size = mxGetScalar(prhs[3]);
 
 	// Parse the pointer to allocated space for expK and k_squared
-	cuComplex *potential = reinterpret_cast<cuComplex *>(potential_ptr);
+	myComplex *potential = reinterpret_cast<myComplex *>(potential_ptr);
 
 	// Get scaling constant (-1i*(dt/2)/hBar)
-	float scale = -(dt/2) / h_bar;
+	double scale = -(dt/2) / h_bar;
 
 	// Calculate the exponential
 	compute_expv<<<NUM_BLOCKS, NUM_THREADS>>>(potential, scale, size);
