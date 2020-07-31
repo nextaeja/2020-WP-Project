@@ -22,7 +22,7 @@ function WavepacketPropagation_beta4_2
     addpath(genpath(pwd));
     
 %===SET=UP=VARIABLES====================================================================================%
-    global A ps eV nx ny nz lx ly lz eps tStart tFinish notifySteps gfxSteps psi psi0 dt0 dt savingSimulationRunning savingDirectory propagationMethod numAdsorbates decayType custpot zOffset pathfile Browniefile savingBrownianPaths
+    global A ps eV nx ny nz lx ly lz eps tStart tFinish notifySteps gfxSteps psi psi0 dt0 dt savingSimulationRunning savingDirectory propagationMethod numAdsorbates decayType custpot zOffset pathfile Browniefile savingBrownianPaths it numIterations
     
     SetupSIUnits();
     
@@ -73,11 +73,12 @@ function WavepacketPropagation_beta4_2
 
     numAdsorbates = 30;
     
-    %tFinish=tFinish+dt0; %%%NaN bug
+    custompaths= true;
+    pathfile="brownianpaths.txt";
     
-    custompaths= false;
-    pathfile="paths.txt";
     
+    % Use integers for loop equality test. CARE: round will give you closest # to tFinish/dt and might be floor or ceiling value
+    numIterations = round(tFinish/dt0);
     
     if(~custompaths)
         SetupBrownianMotionGaussians(displayAdsorbateAnimation, realTimePlotting);%%%NaN bug caused by something in here %%% 
@@ -103,6 +104,10 @@ function WavepacketPropagation_beta4_2
        custpot = fscanf(f,'%f'); 
        fclose(f);
     end
+    
+    
+    % it = iteration. Starts at 0, represents the iteration CURRENTLY being carried out.
+    it = 0;
     
     UpdateBrownianMotionGaussians(decayType, alpha, xSigma, ySigma, gaussPeakVal, wellDepth, tStart);
     %SetupStaticGaussianPotential(decayType, alpha, xSigma, ySigma, gaussPeakVal, wellDepth);
@@ -137,13 +142,9 @@ function WavepacketPropagation_beta4_2
     dt = dt0;
     t = tStart;
    
-    
-    % it = iteration. Starts at 1, represents the iteration CURRENTLY being carried out.
+
     it = 1;
-    
-    % Use integers for loop equality test. CARE: round will give you closest # to tFinish/dt and might be floor or ceiling value
-    numIterations = round(tFinish/dt);
-    
+        
     
     % Loop iteratively until tFinish reached
     while(it <= numIterations)  
@@ -153,19 +154,7 @@ function WavepacketPropagation_beta4_2
         % Check unitarity
         if abs(totProb - 1) > eps
             fprintf(1, 'Step %d incomplete - unitarity error caused by previous step: %d. Time (%.3f ps, %.3f s): (unitarity %.7f)\n', it, it - 1, (it - 1)*dt/ps, toc, totProb);
-            disp(['Halving timestep to dt = ' num2str(dt/2) ' UNITS and restarting.'])
-            errorMessage = strcat('Unitarity error after completing ', num2str(it - 1), 'step(s) - halving timestep. New dt = ', num2str(dt/2, '%.16e'));
-            PrintErrorMessage(errorMessage, false); % Don't print in terminal - already done above.
-            dt = dt/2;
-            psi = psi0;
-            it = 1;
-            t = tStart;
-            numIterations = round(tFinish/dt);
-            notifySteps = floor(numIterations/numGfxToSave);
-            gfxSteps = floor(numIterations/numGfxToSave);
-            psiSaveSteps = floor(numIterations/numPsiToSave);
-            
-            % All items reset. Restarting simulation.
+            error("unitary error") %now terminates on this rather than restarting
         else
             % Notify user if necessary. it - 1 as step is NOT complete yet. it - 1 is complete.
             if notifySteps > 0 && mod(it - 1, notifySteps)== 0

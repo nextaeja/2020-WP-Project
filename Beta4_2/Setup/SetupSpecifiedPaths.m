@@ -1,12 +1,12 @@
 function SetupSpecifiedPaths(displayAdsorbateAnimation, realTimePlotting)
-       global pathfile numAdsorbates tStart tFinish dt0 ps A lx ly gaussianPositions gaussianPositionsTimes
+       global pathfile numAdsorbates tStart tFinish ps A lx ly gaussianPositions gaussianPositionsTimes numIterations
        f=fopen(pathfile,'r');
        paths = fscanf(f,'%f',[1+2*numAdsorbates,Inf]);%you need to specify at least 2 points per adsorbate per dimension in the form t1 a1x a1y a2x a2y... t2 a1x... (i.e. time is its own entry) (units ps and ang)
        fclose(f);                                     %also the highest t must be >tFinish  
        t = paths(1,:)*ps;
-       xtQuery = linspace(tStart, tFinish+dt0, 1001);
-       gaussianPositions = zeros(numAdsorbates, 2, 1001);
-       gaussianPositionsTimes = zeros(numAdsorbates, 2, 1001);
+       xtQuery = linspace(tStart, tFinish, numIterations+1);
+       gaussianPositions = zeros(numAdsorbates, 2, numIterations+1);
+       gaussianPositionsTimes = zeros(numAdsorbates, 2, numIterations+1);
        
        for absno=[1:numAdsorbates]
            for dimno=[0:1]
