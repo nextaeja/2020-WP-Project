@@ -15,20 +15,15 @@ function psiStepped = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t, V_p
     
     expV = exp((-1i*(dt/2)/hBar)*V);
     compute_expv(V_ptr, hBar, dt, nx*ny*nz);
-    cmp_complex_matlab_CUDA(gather(expV), V_ptr, 1e-4, nx*ny*nz);
+    cmp_complex_matlab_CUDA(gather(expV), V_ptr, 1e-4, nx, ny, nz);
     
     psiVStepHalf = expV.*psi;
     psiVStepHalfFT = fftn(psiVStepHalf);
-    psiKStepFT = expK.*psiVStepHalfFT;
-    psiKStep = ifftn(psiKStepFT);
-    
-    % Reverse the x-y
-    bangalla = permute(psiVStepHalf, [3 1 2]);
-    yadda = fftn(bangalla);
-    
+    %psiKStepFT = expK.*psiVStepHalfFT;
+    %psiKStep = ifftn(psiKStepFT);
+            
     compute_fft_step(V_ptr, expK_ptr, psi_ptr, nx, ny, nz);
-    print_complex_CUDA_array(psi_ptr, nx, ny, nz);
-    cmp_complex_matlab_CUDA(gather(yadda), psi_ptr, 1e-5, nx*ny*nz, 1);
+    cmp_complex_matlab_CUDA(gather(psiVStepHalfFT), psi_ptr, 1e3, nx, ny, nz, 1);
     error('test fft');
     
     %%%%TODO:INTESTIGATE%SPLITTING%TIMES-V(dt)%vs%V(dt/2)%etc...%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

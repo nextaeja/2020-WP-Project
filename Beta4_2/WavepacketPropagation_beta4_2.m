@@ -32,9 +32,9 @@ function WavepacketPropagation_beta4_2
     lz = 90*A;
     
     % Setup grid - use powers of 2 for quickest FFT
-    nx = 2;
+    nx = 4;
     ny = 4;
-    nz = 1;
+    nz = 2;
     
     % Acceptable error in wavepacket norm
     eps = 1e-6;
