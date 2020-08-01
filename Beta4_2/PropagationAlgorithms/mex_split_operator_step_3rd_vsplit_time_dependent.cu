@@ -93,6 +93,40 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 void update_brownian_motion_gaussians(myComplex *dev_v, size_t size, double *dev_x0, double *dev_y0, double t_query, int n_adsorbates) {
 }
 
+// With data being a sorted array, return the largest element smaller than to_locate
+int left_locate(int *data, int size, int lbound, int rbound, int to_locate) {
+	if (rbound - lbound == 1) return lbound;
+	if (data[lbound] > to_locate || data[rbound] < to_locate) return -1;
+	if (data[lbound] == to_locate) return lbound;
+	if (data[rbound] == to_locate) return rbound;
+
+	int mid_point = lbound + (rbound - lbound) / 2;
+	if (data[mid_point] == to_locate) {
+		return mid_point;
+	} else if (data[mid_point] < to_locate) {
+		return left_locate(data, size, mid_point, rbound, to_locate);
+	} if (data[mid_point] > to_locate) {
+		return left_locate(data, size, lbound, mid_point, to_locate);
+	}
+}
+
+// With data being a sorted array, return the smallest element larger than to_locate
+int right_locate(int *data, int size, int lbound, int rbound, int to_locate) {
+	if (rbound - lbound == 1) return rbound;
+	if (data[lbound] > to_locate || data[rbound] < to_locate) return -1;
+	if (data[lbound] == to_locate) return lbound;
+	if (data[rbound] == to_locate) return rbound;
+
+	int mid_point = lbound + (rbound - lbound) / 2;
+	if (data[mid_point] == to_locate) {
+		return mid_point;
+	} else if (data[mid_point] < to_locate) {
+		return right_locate(data, size, mid_point, rbound, to_locate);
+	} if (data[mid_point] > to_locate) {
+		return right_locate(data, size, lbound, mid_point, to_locate);
+	}
+}
+
 __global__ void compute_expv(myComplex *dev_expv, double scale, size_t size) {
 	int tid = blockIdx.x * blockDim.x + threadIdx.x;
 
