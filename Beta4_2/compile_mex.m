@@ -14,6 +14,7 @@ mexcuda MEX_helpers/cmp_complex_matlab_CUDA.cu MEX_helpers/complex.cu -lcuda
 mexcuda PropagationAlgorithms/compute_expk.cu MEX_helpers/complex.cu -lcuda
 mexcuda PropagationAlgorithms/compute_expv.cu MEX_helpers/complex.cu -lcuda
 mexcuda PropagationAlgorithms/compute_fft_step.cu MEX_helpers/complex.cu -lcuda -lcufft
+mexcuda PropagationAlgorithms/mex_split_operator_step_3rd_vsplit_time_dependent.cu MEX_helpers/complex.cu MEX_helpers/interpolation1d.cu -lcuda -lcufft
 
 end
 

@@ -22,8 +22,14 @@ function WavepacketPropagation_beta4_2
     addpath(genpath(pwd));
     
 %===SET=UP=VARIABLES====================================================================================%
+<<<<<<< HEAD
     global A ps eV nx ny nz lx ly lz eps tStart tFinish notifySteps gfxSteps psi psi0 dt0 dt savingSimulationRunning savingDirectory propagationMethod numAdsorbates decayType custpot zOffset pathfile Browniefile savingBrownianPaths it numIterations
     
+=======
+    global A ps eV nx ny nz lx ly lz eps tStart tFinish notifySteps gfxSteps psi psi0 dt0 dt savingSimulationRunning savingDirectory propagationMethod numAdsorbates decayType cTime standardTime nCalls cudaTime
+    global mallocTime offsetTime compTime arrayTime copyTime cleanTime hBar kSquared mass gaussianPositions gaussianPositionsTimes x0 y0;
+        
+>>>>>>> Added interpolation function for adsorbate position
     SetupSIUnits();
     
     % Setup lengths. Units = m
@@ -80,7 +86,7 @@ function WavepacketPropagation_beta4_2
     arrayTime = 0;
     copyTime = 0;  
 
-    numAdsorbates = 3;
+    numAdsorbates = 10;
     
     custompaths= true;
     pathfile="brownianpaths.txt";
@@ -204,6 +210,8 @@ function WavepacketPropagation_beta4_2
                     psi = SplitOperatorStep_exp_3rdOrder_VSplit();
                 case 5
                     psi = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t, V_ptr, z_offset_ptr, x0_ptr, y0_ptr, expV_ptr, expK_ptr, expK, psi_ptr);
+                    mex_split_operator_step_3rd_vsplit_time_dependent(t, expV_ptr, z_offset_ptr, x0_ptr, y0_ptr, expK_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, gather(gaussianPositionsTimes), gather(gaussianPositions));
+                    error('fine')
             end
             % Iteration it complete. t is now t + dt
             t = t + dt;

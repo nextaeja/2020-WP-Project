@@ -5,22 +5,24 @@
 
 #include "../MEX_helpers/complex.h"
 #include "../MEX_helpers/cuda_helper.h"
+#include "../MEX_helpers/interpolation1d.h"
 
 #define NDIMS 3
 
 
 __global__ void compute_expv(myComplex *dev_expv, double scale, size_t size);
 
-
-void split_operator_3rd_vsplit_time(myComplex *dev_psi, myComplex *dev_expv, myComplex *dev_expk, double A, double eV,
-		double expv_scale, size_t size, cufftHandle forward_plan, cufftHandle inverse_plan) {
+void split_operator_3rd_vsplit_time(myComplex *dev_psi, myComplex *dev_expv, myComplex *dev_expk, double *dev_gauss_time,
+		double *dev_gauss_pos, double *dev_x0, double *dev_y0, double t_query, double A, double eV, double expv_scale, size_t size,
+		cufftHandle forward_plan, cufftHandle inverse_plan, const mwSize *gauss_dims, int ny) {
 	double alpha = 2.0;
 	double x_sigma = 3*(5.50/6)*A;
-	double x_sigma = 3*(5.50/6)*A;
+	double y_sigma = 3*(5.50/6)*A;
 	double gauss_peak_val = 3*1.61*A;
 	double well_depth = 10e-3*eV;
 
 	/// TODO: UpdateBrownianMotionGaussians
+	interpolate1d_adsorbate_positions<<<1, gauss_dims[0]>>>(dev_gauss_time, dev_gauss_pos, gauss_dims[0], gauss_dims[2], dev_x0, dev_y0, t_query, ny);
 
 	// Get the exponential of the potential
 	compute_expv<<<NUM_BLOCKS, NUM_THREADS>>>(dev_expv, expv_scale, size);
@@ -41,6 +43,7 @@ void split_operator_3rd_vsplit_time(myComplex *dev_psi, myComplex *dev_expv, myC
 	complex_scale<<<NUM_BLOCKS, NUM_THREADS>>>(dev_psi, 1/(double) size, size);
 
 	/// TODO: UpdateBrownianMotionGaussians
+	interpolate1d_adsorbate_positions<<<1, gauss_dims[0]>>>(dev_gauss_time, dev_gauss_pos, gauss_dims[0], gauss_dims[2], dev_x0, dev_y0, t_query, ny);
 
 	// Get the exponential of the potential
 	compute_expv<<<NUM_BLOCKS, NUM_THREADS>>>(dev_expv, expv_scale, size);
@@ -51,32 +54,46 @@ void split_operator_3rd_vsplit_time(myComplex *dev_psi, myComplex *dev_expv, myC
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	// Parse input parameters
-	double t = mxGetScalar(prhs[0]);
+	double t_query = mxGetScalar(prhs[0]);
 	long long expv_ptr = mxGetScalar(prhs[1]);
 	long long z_offset_ptr = mxGetScalar(prhs[2]);
 	long long x0_ptr = mxGetScalar(prhs[3]);
 	long long y0_ptr = mxGetScalar(prhs[4]);
 	long long expk_ptr = mxGetScalar(prhs[5]);
 	long long psi_ptr = mxGetScalar(prhs[6]);
-	size_t nx = mxGetScalar(prhs[7]);
-	size_t ny = mxGetScalar(prhs[8]);
-	size_t nz = mxGetScalar(prhs[9]);
+	int nx = mxGetScalar(prhs[7]);
+	int ny = mxGetScalar(prhs[8]);
+	int nz = mxGetScalar(prhs[9]);
 	int decay_type = mxGetScalar(prhs[10]);
 	double A = mxGetScalar(prhs[11]);
 	double eV = mxGetScalar(prhs[12]);
-	double h_bar;
-	double dt;
+	double h_bar = mxGetScalar(prhs[13]);
+	double dt = mxGetScalar(prhs[14]);
+	double *gaussian_times = mxGetPr(prhs[15]);
+	double *gaussian_positions = mxGetPr(prhs[16]);
 
 	double expv_scale = -dt / (2 * h_bar);
 
 	// Calculate grid size
 	size_t grid_size = nx * ny * nz;
 
+	// Get number adsorbates
+	const mwSize *gauss_dims = mxGetDimensions(prhs[16]);
+
+	// Parse the pointers
+	double *dev_x0 = reinterpret_cast<double *>(x0_ptr);
+	double *dev_y0 = reinterpret_cast<double *>(y0_ptr);
+	double *dev_gauss_time, *dev_gauss_pos;
+	cudaMallocManaged(reinterpret_cast<void **>(&dev_gauss_time), gauss_dims[0] * gauss_dims[1] * gauss_dims[2] * sizeof(double));
+	cudaMallocManaged(reinterpret_cast<void **>(&dev_gauss_pos), gauss_dims[0] * gauss_dims[1] * gauss_dims[2] * sizeof(double));
+	cudaMemcpy(dev_gauss_time, gaussian_times, gauss_dims[0] * gauss_dims[1] * gauss_dims[2] * sizeof(double), cudaMemcpyHostToDevice);
+	cudaMemcpy(dev_gauss_pos, gaussian_positions, gauss_dims[0] * gauss_dims[1] * gauss_dims[2] * sizeof(double), cudaMemcpyHostToDevice);
+
 	// Plan the FFT
 	cufftHandle forward_plan, inverse_plan;
 	int n[3] = {nz, ny, nx};
-	int idist = size;
-	int odist = size;
+	int idist = grid_size;
+	int odist = grid_size;
 	int istride = 1;
 	int ostride = 1;
 	int inembed[3] = {nz, ny, nx}; // MATLAB inverts rows and columns
@@ -88,43 +105,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
 	cufftDestroy(forward_plan);
 	cufftDestroy(inverse_plan);
-}
-
-void update_brownian_motion_gaussians(myComplex *dev_v, size_t size, double *dev_x0, double *dev_y0, double t_query, int n_adsorbates) {
-}
-
-// With data being a sorted array, return the largest element smaller than to_locate
-int left_locate(int *data, int size, int lbound, int rbound, int to_locate) {
-	if (rbound - lbound == 1) return lbound;
-	if (data[lbound] > to_locate || data[rbound] < to_locate) return -1;
-	if (data[lbound] == to_locate) return lbound;
-	if (data[rbound] == to_locate) return rbound;
-
-	int mid_point = lbound + (rbound - lbound) / 2;
-	if (data[mid_point] == to_locate) {
-		return mid_point;
-	} else if (data[mid_point] < to_locate) {
-		return left_locate(data, size, mid_point, rbound, to_locate);
-	} if (data[mid_point] > to_locate) {
-		return left_locate(data, size, lbound, mid_point, to_locate);
-	}
-}
-
-// With data being a sorted array, return the smallest element larger than to_locate
-int right_locate(int *data, int size, int lbound, int rbound, int to_locate) {
-	if (rbound - lbound == 1) return rbound;
-	if (data[lbound] > to_locate || data[rbound] < to_locate) return -1;
-	if (data[lbound] == to_locate) return lbound;
-	if (data[rbound] == to_locate) return rbound;
-
-	int mid_point = lbound + (rbound - lbound) / 2;
-	if (data[mid_point] == to_locate) {
-		return mid_point;
-	} else if (data[mid_point] < to_locate) {
-		return right_locate(data, size, mid_point, rbound, to_locate);
-	} if (data[mid_point] > to_locate) {
-		return right_locate(data, size, lbound, mid_point, to_locate);
-	}
+	cudaFree(dev_gauss_time);
+	cudaFree(dev_gauss_pos);
 }
 
 __global__ void compute_expv(myComplex *dev_expv, double scale, size_t size) {

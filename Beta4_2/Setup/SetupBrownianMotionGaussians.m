@@ -9,8 +9,14 @@ function SetupBrownianMotionGaussians(displayAdsorbateAnimation, realTimePlottin
     % Mass
     m = 3.0160293*amu;
 
+<<<<<<< HEAD
     gaussianPositions = zeros(numAdsorbates, 2, numIterations+1);
     gaussianPositionsTimes = zeros(numAdsorbates, 2, numIterations+1);
+=======
+    gaussianPositionsDiv = 4;
+    gaussianPositions = zeros(numAdsorbates, 2, gaussianPositionsDiv);
+    gaussianPositionsTimes = zeros(numAdsorbates, 2, gaussianPositionsDiv);
+>>>>>>> Added interpolation function for adsorbate position
     
     numDims = 2;
     if ny == 1
@@ -35,7 +41,11 @@ function SetupBrownianMotionGaussians(displayAdsorbateAnimation, realTimePlottin
             % Do integration
             [t, y] = ode45(@(t,y) RandomMotionDifferentialEquation(t,y, xi, xi_t, gamma, m), [tStart tFinish+dt0], y0);%adding dt0s due to overuse of interp1
 
+<<<<<<< HEAD
             xtQuery = linspace(tStart, tFinish, numIterations+1);
+=======
+            xtQuery = linspace(tStart, tFinish, gaussianPositionsDiv);
+>>>>>>> Added interpolation function for adsorbate position
             xQuery = interp1(t, y(:,1), xtQuery);
             
             gaussianPositions(adsorbateNum, dimNum, :) = xQuery;
