@@ -9,14 +9,8 @@ function SetupBrownianMotionGaussians(displayAdsorbateAnimation, realTimePlottin
     % Mass
     m = 3.0160293*amu;
 
-<<<<<<< HEAD
     gaussianPositions = zeros(numAdsorbates, 2, numIterations+1);
     gaussianPositionsTimes = zeros(numAdsorbates, 2, numIterations+1);
-=======
-    gaussianPositionsDiv = 4;
-    gaussianPositions = zeros(numAdsorbates, 2, gaussianPositionsDiv);
-    gaussianPositionsTimes = zeros(numAdsorbates, 2, gaussianPositionsDiv);
->>>>>>> Added interpolation function for adsorbate position
     
     numDims = 2;
     if ny == 1

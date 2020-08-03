@@ -27,7 +27,7 @@ function WavepacketPropagation_beta4_2
     
 =======
     global A ps eV nx ny nz lx ly lz eps tStart tFinish notifySteps gfxSteps psi psi0 dt0 dt savingSimulationRunning savingDirectory propagationMethod numAdsorbates decayType cTime standardTime nCalls cudaTime
-    global mallocTime offsetTime compTime arrayTime copyTime cleanTime hBar kSquared mass gaussianPositions gaussianPositionsTimes x0 y0;
+    global mallocTime offsetTime compTime arrayTime copyTime cleanTime hBar kSquared mass gaussianPositions gaussianPositionsTimes dx dy dz;
         
 >>>>>>> Added interpolation function for adsorbate position
     SetupSIUnits();
@@ -38,8 +38,8 @@ function WavepacketPropagation_beta4_2
     lz = 90*A;
     
     % Setup grid - use powers of 2 for quickest FFT
-    nx = 8;
-    ny = 4;
+    nx = 4;
+    ny = 8;
     nz = 2;
     
     % Acceptable error in wavepacket norm
@@ -178,9 +178,6 @@ function WavepacketPropagation_beta4_2
             % Notify user if necessary. it - 1 as step is NOT complete yet. it - 1 is complete.
             if notifySteps > 0 && mod(it - 1, notifySteps)== 0
                 fprintf(1, 'Step %d complete (%.3f ps, %.3f s): propagate wpkt (unitarity %.7f)\n', it - 1, t/ps, toc, totProb);
-                %fprintf("  MATLAB time: %.5fms\n", standardTime/nCalls*1000);
-                %fprintf("  C      time: %.5fms, speedup x%.1f\n", cTime/nCalls*1000, standardTime/cTime);
-                fprintf("  CUDA   time: %.5fms, speedup x%.1f x%.1f\n", cudaTime/nCalls*1000, standardTime/cudaTime, cTime/cudaTime);
             end
             
             % Produce graphics if asked and if correct # of steps has passed
@@ -209,9 +206,15 @@ function WavepacketPropagation_beta4_2
                 case 4
                     psi = SplitOperatorStep_exp_3rdOrder_VSplit();
                 case 5
+                    tic;
                     psi = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t, V_ptr, z_offset_ptr, x0_ptr, y0_ptr, expV_ptr, expK_ptr, expK, psi_ptr);
-                    mex_split_operator_step_3rd_vsplit_time_dependent(t, expV_ptr, z_offset_ptr, x0_ptr, y0_ptr, expK_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, gather(gaussianPositionsTimes), gather(gaussianPositions));
-                    error('fine')
+                    standardTime = standardTime + toc;
+                    
+                    tic;
+                    fprintf("%d)\n", nCalls+1);
+                    mex_split_operator_step_3rd_vsplit_time_dependent(t, expV_ptr, z_offset_ptr, x0_ptr, y0_ptr, expK_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, gather(gaussianPositionsTimes), gather(gaussianPositions), dx, dy, dz);
+                    cudaTime = cudaTime + toc;
+                    nCalls = nCalls + 1;
             end
             % Iteration it complete. t is now t + dt
             t = t + dt;
