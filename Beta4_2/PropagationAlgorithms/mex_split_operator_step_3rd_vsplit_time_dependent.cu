@@ -11,6 +11,24 @@
 #define NDIMS 3
 
 
+#define CUDA_HANDLE(code) {_handle_cuda_error((code), __FILE__, __LINE__);}
+void _handle_cuda_error(cudaError_t code, const char *file, int line) {
+	if (code != cudaSuccess) {
+		char err_msg[500];
+		sprintf(err_msg, "Error '%s' occurred in file '%s'@%d\n", cudaGetErrorString(code), file, line);
+		mexErrMsgIdAndTxt("SplitOperator:CUDA:FFT", err_msg);
+	}
+}
+
+#define CUDAFFT_HANDLE(code) {_handle_cudafft_error((code), __FILE__, __LINE__);}
+void _handle_cudafft_error(cufftResult code, const char *file, int line) {
+	if (code != CUFFT_SUCCESS) {
+		char err_msg[500];
+		sprintf(err_msg, "Cuda FFT error occurred in file '%s'@%d\n", file, line);
+		mexErrMsgIdAndTxt("SplitOperator:CUDA:FFT", err_msg);
+	}
+}
+
 __global__ void compute_expv(myComplex *dev_expv, double scale, size_t size);
 
 void split_operator_3rd_vsplit_time(myComplex *dev_psi, myComplex *dev_expv, myComplex *dev_expk, double *dev_gauss_time,
@@ -21,45 +39,45 @@ void split_operator_3rd_vsplit_time(myComplex *dev_psi, myComplex *dev_expv, myC
 
 	/// TODO: UpdateBrownianMotionGaussians
 	interpolate1d_adsorbate_positions<<<1, gauss_dims[0]>>>(dev_gauss_time, dev_gauss_pos, gauss_dims[0], gauss_dims[2], dev_x0, dev_y0, t_query, ny);
-	cudaDeviceSynchronize();
+	CUDA_HANDLE(cudaDeviceSynchronize());
 	setup_dynamic_gaussian_potential(dev_expv, dev_z_offset, dev_x0, dev_y0, gauss_dims[0], nx, ny, nz, decay_type, alpha, eV, A, dx, dy, dz);
-	cudaDeviceSynchronize();
+	CUDA_HANDLE(cudaDeviceSynchronize());
 
 	// Get the exponential of the potential
 	compute_expv<<<NUM_BLOCKS, NUM_THREADS>>>(dev_expv, expv_scale, size);
-	cudaDeviceSynchronize();
+	CUDA_HANDLE(cudaDeviceSynchronize());
 
 	// Apply half potential operator
 	complex_mul<<<NUM_BLOCKS, NUM_THREADS>>>(dev_psi, dev_expv, size);
-	cudaDeviceSynchronize();
+	CUDA_HANDLE(cudaDeviceSynchronize());
 
 	// Compute the forward FFT
 	cufftExecZ2Z(forward_plan, dev_psi, dev_psi, CUFFT_FORWARD);
-	cudaDeviceSynchronize();
+	CUDA_HANDLE(cudaDeviceSynchronize());
 
 	// apply kinetic operator
 	complex_mul<<<NUM_BLOCKS, NUM_THREADS>>>(dev_psi, dev_expk, size);
-	cudaDeviceSynchronize();
+	CUDA_HANDLE(cudaDeviceSynchronize());
 
 	// Invert FFT
 	cufftExecZ2Z(inverse_plan, dev_psi, dev_psi, CUFFT_INVERSE);
-	cudaDeviceSynchronize();
+	CUDA_HANDLE(cudaDeviceSynchronize());
 	complex_scale<<<NUM_BLOCKS, NUM_THREADS>>>(dev_psi, 1/(double) size, size);
-	cudaDeviceSynchronize();
+	CUDA_HANDLE(cudaDeviceSynchronize());
 
 	/// TODO: UpdateBrownianMotionGaussians
 	interpolate1d_adsorbate_positions<<<1, gauss_dims[0]>>>(dev_gauss_time, dev_gauss_pos, gauss_dims[0], gauss_dims[2], dev_x0, dev_y0, t_query+dt, ny);
-	cudaDeviceSynchronize();
+	CUDA_HANDLE(cudaDeviceSynchronize());
 	setup_dynamic_gaussian_potential(dev_expv, dev_z_offset, dev_x0, dev_y0, gauss_dims[0], nx, ny, nz, decay_type, alpha, eV, A, dx, dy, dz);
-	cudaDeviceSynchronize();
+	CUDA_HANDLE(cudaDeviceSynchronize());
 
 	// Get the exponential of the potential
 	compute_expv<<<NUM_BLOCKS, NUM_THREADS>>>(dev_expv, expv_scale, size);
-	cudaDeviceSynchronize();
+	CUDA_HANDLE(cudaDeviceSynchronize());
 
 	// Apply half potential operator
 	complex_mul<<<NUM_BLOCKS, NUM_THREADS>>>(dev_psi, dev_expv, size);
-	cudaDeviceSynchronize();
+	CUDA_HANDLE(cudaDeviceSynchronize());
 }
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
@@ -87,6 +105,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
 	double expv_scale = -dt / (2 * h_bar);
 
+	size_t total, free;
+	CUDA_HANDLE(cudaMemGetInfo(&free, &total));
+	//mexPrintf("Free: %.2lf of %.2lf (%.2lf%%)\n", free / (double) (1 << 30), total / (double) (1 << 30), free / (double) total * 100.0);
+
 	// Calculate grid size
 	size_t grid_size = nx * ny * nz;
 
@@ -104,13 +126,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	// Copy the adsorbate position and times into GPU
 	// TODO: move this out of this function. Only execute at beginning
 	double *dev_gauss_time, *dev_gauss_pos;
-	cudaMallocManaged(reinterpret_cast<void **>(&dev_gauss_time), gauss_dims[0] * gauss_dims[1] * gauss_dims[2] * sizeof(double));
-	cudaMallocManaged(reinterpret_cast<void **>(&dev_gauss_pos), gauss_dims[0] * gauss_dims[1] * gauss_dims[2] * sizeof(double));
-	cudaMemcpy(dev_gauss_time, gaussian_times, gauss_dims[0] * gauss_dims[1] * gauss_dims[2] * sizeof(double), cudaMemcpyHostToDevice);
-	cudaMemcpy(dev_gauss_pos, gaussian_positions, gauss_dims[0] * gauss_dims[1] * gauss_dims[2] * sizeof(double), cudaMemcpyHostToDevice);
-	if (cudaGetLastError() != cudaSuccess) {
-		mexErrMsgIdAndTxt("", "Memory allocation failed");
-	}
+	CUDA_HANDLE(cudaMallocManaged(reinterpret_cast<void **>(&dev_gauss_time), gauss_dims[0] * gauss_dims[1] * gauss_dims[2] * sizeof(double)));
+	CUDA_HANDLE(cudaMallocManaged(reinterpret_cast<void **>(&dev_gauss_pos), gauss_dims[0] * gauss_dims[1] * gauss_dims[2] * sizeof(double)));
+	CUDA_HANDLE(cudaMemcpy(dev_gauss_time, gaussian_times, gauss_dims[0] * gauss_dims[1] * gauss_dims[2] * sizeof(double), cudaMemcpyHostToDevice));
+	CUDA_HANDLE(cudaMemcpy(dev_gauss_pos, gaussian_positions, gauss_dims[0] * gauss_dims[1] * gauss_dims[2] * sizeof(double), cudaMemcpyHostToDevice));
 
 	// Plan the FFT
 	cufftHandle forward_plan, inverse_plan;
@@ -121,20 +140,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	int ostride = 1;
 	int inembed[3] = {nz, ny, nx}; // MATLAB inverts rows and columns
 	int onembed[3] = {nz, ny, nx};
-	if (cufftPlanMany(&forward_plan, 3, n, inembed, istride, idist, onembed, ostride, odist, CUFFT_Z2Z, 1) != CUFFT_SUCCESS) {
-		mexErrMsgIdAndTxt("", "Forward plan failed");
-	}
-	if (cufftPlanMany(&inverse_plan, 3, n, onembed, ostride, odist, inembed, istride, idist, CUFFT_Z2Z, 1) != CUFFT_SUCCESS) {
-		mexErrMsgIdAndTxt("", "Forward plan failed");
-	}
+	CUDAFFT_HANDLE(cufftPlanMany(&forward_plan, 3, n, inembed, istride, idist, onembed, ostride, odist, CUFFT_Z2Z, 1));
+	CUDAFFT_HANDLE(cufftPlanMany(&inverse_plan, 3, n, onembed, ostride, odist, inembed, istride, idist, CUFFT_Z2Z, 1));
 
 	// TODO: PERFORM ACTUAL STEP
-	split_operator_3rd_vsplit_time(dev_psi, dev_expv, dev_expk, dev_gauss_time, dev_gauss_pos, dev_x0, dev_y0, dev_z_offset, t_query, A, eV, expv_scale, grid_size, forward_plan, inverse_plan, gauss_dims, nx, ny, nz, decay_type, dx, dy, dz, dt);
+	//split_operator_3rd_vsplit_time(dev_psi, dev_expv, dev_expk, dev_gauss_time, dev_gauss_pos, dev_x0, dev_y0, dev_z_offset, t_query, A, eV, expv_scale, grid_size, forward_plan, inverse_plan, gauss_dims, nx, ny, nz, decay_type, dx, dy, dz, dt);
+	left_locate_3d(dev_gauss_time, 0, gauss_dims[2]-1, t_query, gauss_dims[0], 0, 0, 0);
+	//right_locate_3d(dev_gauss_time, 0, gauss_dims[2]-1, t_query, gauss_dims[0], 0, 0);
 
-	cufftDestroy(forward_plan);
-	cufftDestroy(inverse_plan);
-	cudaFree(dev_gauss_time);
-	cudaFree(dev_gauss_pos);
+	CUDAFFT_HANDLE(cufftDestroy(forward_plan));
+	CUDAFFT_HANDLE(cufftDestroy(inverse_plan));
+	CUDA_HANDLE(cudaFree(dev_gauss_time));
+	CUDA_HANDLE(cudaFree(dev_gauss_pos));
 }
 
 __global__ void compute_expv(myComplex *dev_expv, double scale, size_t size) {

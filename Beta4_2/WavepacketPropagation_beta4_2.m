@@ -210,11 +210,23 @@ function WavepacketPropagation_beta4_2
                     psi = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t, V_ptr, z_offset_ptr, x0_ptr, y0_ptr, expV_ptr, expK_ptr, expK, psi_ptr);
                     standardTime = standardTime + toc;
                     
+                    for k=1:nz
+                        for i=1:nx
+                            for j=1:ny
+                                fprintf("(%e + i*%e) ", real(psi(i, j, k)), imag(psi(i, j, k)));
+                            end
+                            fprintf("\n");
+                        end
+                        fprintf("\n");
+                    end
+
                     tic;
-                    fprintf("%d)\n", nCalls+1);
+                    fprintf("%d)  %e \n", nCalls+1, t);
                     mex_split_operator_step_3rd_vsplit_time_dependent(t, expV_ptr, z_offset_ptr, x0_ptr, y0_ptr, expK_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, gather(gaussianPositionsTimes), gather(gaussianPositions), dx, dy, dz);
+                    print_complex_CUDA_array(psi_ptr, nx, ny, nz);
                     cudaTime = cudaTime + toc;
                     nCalls = nCalls + 1;
+                    error('bla')
             end
             % Iteration it complete. t is now t + dt
             t = t + dt;

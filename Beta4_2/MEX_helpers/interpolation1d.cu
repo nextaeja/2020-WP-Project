@@ -6,8 +6,8 @@ __global__ void interpolate1d_adsorbate_positions(double *gaussian_times, double
 
 	while (adsorbate < num_adsorbates) {
 		// Get bounds for time interval around t_query
-		int min_time_idx = left_locate_3d(gaussian_times, 0, num_gaussian_positions-1, t_query, num_adsorbates, adsorbate, 0);
-		int max_time_idx = right_locate_3d(gaussian_times, 0, num_gaussian_positions-1, t_query, num_adsorbates, adsorbate, 0);
+		int min_time_idx = 0;//left_locate_3d(gaussian_times, 0, num_gaussian_positions-1, t_query, num_adsorbates, adsorbate, 0);
+		int max_time_idx = 0;//right_locate_3d(gaussian_times, 0, num_gaussian_positions-1, t_query, num_adsorbates, adsorbate, 0);
 
 		// Handle case of a out of range value
 		if (min_time_idx < 0 || max_time_idx < 0) {
@@ -59,7 +59,15 @@ __device__ __host__ double get_gaussian_adsorbate(double *data, int idx, int dim
 }
 
 // With data being a sorted array, return the largest element smaller than to_locate
-__device__ __host__ int left_locate_3d(double *data, int lbound, int rbound, double to_locate, int num_adsorbates, int adsorbate, int dim) {
+__device__ __host__ int left_locate_3d(double *data, int lbound, int rbound, double to_locate, int num_adsorbates, int adsorbate, int dim, int depth) {
+	if (depth > 100) {
+		mexErrMsgIdAndTxt("SplitOperator:Interpolate:LeftLocate", "Hit max recursion depth in left locate\n");
+		mexPrintf("Bangalla");
+		return -1;
+	} else {
+		depth++;
+	}
+
 	if (rbound - lbound == 1) return lbound;
 
 	// Find mid point
@@ -69,6 +77,8 @@ __device__ __host__ int left_locate_3d(double *data, int lbound, int rbound, dou
 	double lvalue = get_gaussian_adsorbate(data, lbound, dim, adsorbate, num_adsorbates);
 	double rvalue = get_gaussian_adsorbate(data, rbound, dim, adsorbate, num_adsorbates);
 	double mid_value = get_gaussian_adsorbate(data, mid_point, dim, adsorbate, num_adsorbates);
+	//mexPrintf("%e) %e %e %e\n", to_locate, lvalue, mid_value, rvalue);
+
 
 	// Handle the case of out of bound value
 	if (lvalue > to_locate || rvalue < to_locate) return -1;
@@ -78,17 +88,27 @@ __device__ __host__ int left_locate_3d(double *data, int lbound, int rbound, dou
 	if (rvalue == to_locate) return rbound;
 
 	if (mid_value == to_locate) {	// Value found in the middle
+		mexPrintf("Tho bekkato\n");
 		return mid_point;
 	} else if (to_locate < mid_value) {
-		return left_locate_3d(data, lbound, mid_value, to_locate, num_adsorbates, adsorbate, dim);
+		//mexPrintf("Going left\n");
+		return left_locate_3d(data, lbound, mid_point, to_locate, num_adsorbates, adsorbate, dim, depth);
 	} else {
-		return left_locate_3d(data, mid_value+1, rbound, to_locate, num_adsorbates, adsorbate, dim);
+		//mexPrintf("Going right\n");
+		return left_locate_3d(data, mid_point+1, rbound, to_locate, num_adsorbates, adsorbate, dim, depth);
 	}
 }
 
 // With data being a sorted array, return the smallest element larger than to_locate
 __device__ __host__ int right_locate_3d(double *data, int lbound, int rbound, double to_locate, int num_adsorbates, int adsorbate, int dim) {
 	if (rbound - lbound == 1) return rbound;
+	static int depth = 0;
+	if (depth > 10000) {
+		mexPrintf("Hit max recursion depth in right locate\n");
+		return -1;
+	} else {
+		depth++;
+	}
 
 	// Find mid point
 	int mid_point = lbound + (rbound - lbound) / 2;
@@ -108,8 +128,8 @@ __device__ __host__ int right_locate_3d(double *data, int lbound, int rbound, do
 	if (mid_value == to_locate) {	// Value found in the middle
 		return mid_point;
 	} else if (to_locate < mid_value) {
-		return right_locate_3d(data, lbound, mid_value, to_locate, num_adsorbates, adsorbate, dim);
+		return right_locate_3d(data, lbound, mid_point, to_locate, num_adsorbates, adsorbate, dim);
 	} else {
-		return right_locate_3d(data, mid_value+1, rbound, to_locate, num_adsorbates, adsorbate, dim);
+		return right_locate_3d(data, mid_point+1, rbound, to_locate, num_adsorbates, adsorbate, dim);
 	}
 }
