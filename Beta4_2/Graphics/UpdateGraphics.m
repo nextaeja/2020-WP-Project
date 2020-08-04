@@ -162,14 +162,19 @@ function UpdateGraphics(currentTime, itNumCompleted) % itNum == Iteration Number
             ylabel('kx');
             
             % K-space 2D cut 3/4 of ny:
+            %%% that's a lie, it's a potential plot
+            
             subplot(3,3,9);
             %imagesc(kzScale, kxScale,squeeze(abs(psiFT(:,:,floor(3*nz/4)))));
-            contour(squeeze(abs(transpose(V(:,:,1)))));
+            [c,h]=contour(squeeze(abs(transpose(V(:,:,1)))));
+            %h.LevelStep= 10^-14;
+            
             set(gca,'dataaspectratio',[1 1 1]);
             %title(['2D k-space slice at nz = ' num2str(floor(3*nz/4))]);
             title(['V in 2D surface plane']);
             xlabel('nx');
             ylabel('ny');
+           
             
             
             % Add time and step number to plot title. Use super title (suptitle)

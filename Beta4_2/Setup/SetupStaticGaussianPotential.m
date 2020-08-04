@@ -6,7 +6,7 @@
 % Note: parameterIfNeeded is unused for decayType 1 and 2, so should be set arbitrarily to 0
 %
 function SetupStaticGaussianPotential(decayType, inParameterIfNeeded, xSigmaIn, ySigmaIn, gaussPeakValIn, wellDepthIn)
-    global nx ny nz lx ly dx dy dz eV A; % Needed in function
+    global nx ny nz lx ly dx dy dz eV A zOffset; % Needed in function
     global V; % Set in function
     
     % Gaussian Properties
@@ -47,7 +47,6 @@ function SetupStaticGaussianPotential(decayType, inParameterIfNeeded, xSigmaIn, 
     % Create constants to pass to arrayfun GPU calculation of 1D z potential
     %Vmax = 100e-3*eV;
     zCharacteristic = (1/2.06)*A; % Vroot = pt. where V = 0 i.e. the z value where V = 0
-    zOffset = 0*A; % Shift entire V away from boundary to stop Q.Tunneling through V
     
     wellDepth = wellDepthIn;%10e-3*eV;
     wellMinZPt = 2*A;
@@ -88,6 +87,8 @@ function SetupStaticGaussianPotential(decayType, inParameterIfNeeded, xSigmaIn, 
             
             % Call function
             zEffective3D = arrayfun(@morseLikePotential, zEffective3D, wellDepth3D, wellMinZPt3D, a3D, alpha3D);
+        case 4
+            zEffective3D = specPotwrap(zEffective3D,zOffset);
     end
     
     V = zEffective3D;
@@ -116,4 +117,19 @@ function potentialVal = morsePotential(z, wellDepth, wellMinZPt, a)
 end
 function potentialVal = morseLikePotential(z, wellDepth, wellMinZPt, a, alpha)
     potentialVal = wellDepth*(exp(-2*a*(z - wellMinZPt)) - alpha*exp(-a*(z - wellMinZPt)));
+end
+
+function zEffective3D = specPotwrap(zEffective3D,zOffset)
+    global custpot dz nx ny nz
+    len= length(custpot);
+
+    function potentialVal = specPotential(z)
+       ind=round((z-zOffset)/(dz))+1; %%%
+       if(0<ind && ind<=len)
+          potentialVal= custpot(ind);
+       else
+           potentialVal=0;
+       end
+    end  
+    zEffective3D = arrayfun(@specPotential, zEffective3D);
 end

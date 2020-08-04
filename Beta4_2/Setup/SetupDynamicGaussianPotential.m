@@ -6,7 +6,7 @@
 % Note: parameterIfNeeded is unused for decayType 1 and 2, so should be set arbitrarily to 0
 %
 function SetupDynamicGaussianPotential(decayType, inParameterIfNeeded, xSigmaIn, ySigmaIn, gaussPeakValIn, wellDepthIn, x0, y0)
-    global nx ny nz lx ly dx dy dz eV A numAdsorbates; % Needed in function
+    global nx ny nz lx ly lz dx dy dz eV A numAdsorbates zOffset; % Needed in function
     global V; % Set in function
     
     % Gaussian Properties
@@ -31,8 +31,8 @@ function SetupDynamicGaussianPotential(decayType, inParameterIfNeeded, xSigmaIn,
     
     % Use loop to calculate for all adsorbates
     zOffset2D = zeros(nx, ny, 'gpuArray');
-    xSigma2D(1:nx, 1:ny) = xSigma; %%THIS ISNT A GPU ARRAY
-    ySigma2D(1:nx, 1:ny) = ySigma; %%THIS ISNT A GPU ARRAY
+    xSigma2D(1:nx, 1:ny) = xSigma; %%THIS ISN'T A GPU ARRAY
+    ySigma2D(1:nx, 1:ny) = ySigma; %%THIS ISN'T A GPU ARRAY
     for adsorbateNum = 1:numAdsorbates
         % Setup 2D constants to use as input arguments for arrayfun use
         x02D(1:nx, 1:ny) = x0(adsorbateNum);
@@ -46,14 +46,13 @@ function SetupDynamicGaussianPotential(decayType, inParameterIfNeeded, xSigmaIn,
     % Setup 3D z grid
     zGrid3D = repmat(zGrid1D, nx, 1, ny); % Created [nx nz ny]
     zGrid3D = permute(zGrid3D, [1 3 2]);  % Permuted to [nx ny nz]
-    
+
     % Calculate zEffective 3D grid
     zEffective3D = zGrid3D - zOffset3D;
-    
+  
     % Create constants to pass to arrayfun GPU calculation of 1D z potential
     %Vmax = 100e-3*eV;
     zCharacteristic = (1/2.06)*A; % Vroot = pt. where V = 0 i.e. the z value where V = 0
-    zOffset = 0*A; % Shift entire V away from boundary to stop Q.Tunneling through V
     
     wellDepth = wellDepthIn;%10e-3*eV;
     wellMinZPt = 2*A;
@@ -94,10 +93,13 @@ function SetupDynamicGaussianPotential(decayType, inParameterIfNeeded, xSigmaIn,
             
             % Call function
             zEffective3D = arrayfun(@morseLikePotential, zEffective3D, wellDepth3D, wellMinZPt3D, a3D, alpha3D);
+            
+        case 4
+            zEffective3D = specPotwrap(zEffective3D,zOffset);
+            
     end
     
     V = zEffective3D;
-    
 end
 function gaussianVal = gaussian2DGrid(x, y, x0, y0, xSigma, ySigma)
     % Gaussian exp arguments
@@ -122,4 +124,19 @@ function potentialVal = morsePotential(z, wellDepth, wellMinZPt, a)
 end
 function potentialVal = morseLikePotential(z, wellDepth, wellMinZPt, a, alpha)
     potentialVal = wellDepth*(exp(-2*a*(z - wellMinZPt)) - alpha*exp(-a*(z - wellMinZPt)));
+end
+
+function zEffective3D = specPotwrap(zEffective3D,zOffset)
+    global custpot dz nx ny nz
+    len= length(custpot);
+
+    function potentialVal = specPotential(z)
+       ind=round((z-zOffset)/(dz))+1; %%%
+       if(0<ind && ind<=len)
+          potentialVal= custpot(ind);
+       else
+           potentialVal=0;
+       end
+    end  
+    zEffective3D = arrayfun(@specPotential, zEffective3D);
 end

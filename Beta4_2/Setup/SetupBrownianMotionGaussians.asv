@@ -1,5 +1,5 @@
 function SetupBrownianMotionGaussians(displayAdsorbateAnimation, realTimePlotting)
-    global A ps amu lx ly nx ny dx dy tStart tFinish gaussianPositions gaussianPositionsTimes numAdsorbates dt0 numIterations Browniefile savingBrownianPaths;
+    global A ps amu lx ly nx ny dx dy tStart tFinish gaussianPositions gaussianPositionsTimes numAdsorbates dt0 Browniefile savingBrownianPaths;
     xmax = [(lx - dx) (ly - dy)];
     vmax = 5*A/ps; % max initial speed in A/ps
 
@@ -9,8 +9,8 @@ function SetupBrownianMotionGaussians(displayAdsorbateAnimation, realTimePlottin
     % Mass
     m = 3.0160293*amu;
 
-    gaussianPositions = zeros(numAdsorbates, 2, numIterations+1);
-    gaussianPositionsTimes = zeros(numAdsorbates, 2, numIterations+1);
+    gaussianPositions = zeros(numAdsorbates, 2, 1001);
+    gaussianPositionsTimes = zeros(numAdsorbates, 2, 1001);
     
     numDims = 2;
     if ny == 1
@@ -30,12 +30,12 @@ function SetupBrownianMotionGaussians(displayAdsorbateAnimation, realTimePlottin
 
             % Random motion impulses at given times
             xi = 2*(rand(1, numImpulses) - 0.5);
-            xi_t = linspace(tStart, tFinish+dt0, numImpulses);
+            xi_t = linspace(tStart, tFinish+2*dt0, numImpulses);
       
             % Do integration
-            [t, y] = ode45(@(t,y) RandomMotionDifferentialEquation(t,y, xi, xi_t, gamma, m), [tStart tFinish+dt0], y0);%adding dt0s due to overuse of interp1
+            [t, y] = ode45(@(t,y) RandomMotionDifferentialEquation(t,y, xi, xi_t, gamma, m), [tStart tFinish+2*dt0], y0);%adding dt0s due to overuse of interp1
 
-            xtQuery = linspace(tStart, tFinish, numIterations+1);
+            xtQuery = linspace(tStart, tFinish+dt0, 1001);
             xQuery = interp1(t, y(:,1), xtQuery);
             
             gaussianPositions(adsorbateNum, dimNum, :) = xQuery;
@@ -46,21 +46,7 @@ function SetupBrownianMotionGaussians(displayAdsorbateAnimation, realTimePlottin
     % Cyclic Boundary Conditions - make adsorbates loop back round to other side of simulation if they move past simulation boundary
     gaussianPositions(:,1,:) = mod(gaussianPositions(:,1,:), lx - dx);
     gaussianPositions(:,2,:) = mod(gaussianPositions(:,2,:), ly - dy);
-
-    if(savingBrownianPaths)
-       f=fopen(Browniefile, "wt");
-       for i= 1:(1+numIterations)
-           fprintf(f,"%f",(i-1)*dt0/ps);
-           for ads = 1: numAdsorbates
-               for dim = [1,2]
-                   fprintf(f,"% f",gaussianPositions(ads,dim,i)/A);
-               end
-           end
-           fprintf(f,"\n");
-       end
-       fclose(f);
-    end
-
+    if(Browniefile savingBrownianPaths
     figure %%%
     for adsorbateNum = 1:numAdsorbates
         plot(squeeze(gaussianPositions(adsorbateNum, 1, :))/A, squeeze(gaussianPositions(adsorbateNum, 2, :))/A, '.', 'MarkerSize', 1);
