@@ -22,14 +22,8 @@ function WavepacketPropagation_beta4_2
     addpath(genpath(pwd));
     
 %===SET=UP=VARIABLES====================================================================================%
-<<<<<<< HEAD
     global A ps eV nx ny nz lx ly lz eps tStart tFinish notifySteps gfxSteps psi psi0 dt0 dt savingSimulationRunning savingDirectory propagationMethod numAdsorbates decayType custpot zOffset pathfile Browniefile savingBrownianPaths it numIterations
     
-=======
-    global A ps eV nx ny nz lx ly lz eps tStart tFinish notifySteps gfxSteps psi psi0 dt0 dt savingSimulationRunning savingDirectory propagationMethod numAdsorbates decayType cTime standardTime nCalls cudaTime
-    global mallocTime offsetTime compTime arrayTime copyTime cleanTime hBar kSquared mass gaussianPositions gaussianPositionsTimes dx dy dz;
-        
->>>>>>> Added interpolation function for adsorbate position
     SetupSIUnits();
     
     % Setup lengths. Units = m
