@@ -22,7 +22,7 @@ function WavepacketPropagation_beta4_2
     addpath(genpath(pwd));
     
 %===SET=UP=VARIABLES====================================================================================%
-    global A ps eV nx ny nz lx ly lz eps tStart tFinish notifySteps gfxSteps psi psi0 dt0 dt savingSimulationRunning savingDirectory propagationMethod numAdsorbates decayType custpot zOffset pathfile Browniefile savingBrownianPaths it numIterations
+    global A ps eV hBar kSquared mass nx ny nz dx dy dz lx ly lz eps tStart tFinish notifySteps gfxSteps psi psi0 dt0 dt savingSimulationRunning savingDirectory propagationMethod numAdsorbates decayType custpot zOffset pathfile Browniefile savingBrownianPaths it numIterations gaussianPositions
     
     SetupSIUnits();
     
@@ -46,7 +46,7 @@ function WavepacketPropagation_beta4_2
         
     savingSimulationRunning = false;
     savingSimulationEnd = false;
-    realTimePlotting = true;
+    realTimePlotting = false;
     displayAdsorbateAnimation = false;
     savingBrownianPaths=false;
     Browniefile="brownianpaths.txt";
@@ -68,23 +68,20 @@ function WavepacketPropagation_beta4_2
     % split, time dependent.
     propagationMethod = 5;
     
-    % Setup debug variables
-    cTime = 0.0;
-    standardTime = 0.0;
-    cudaTime = 0.0;
-    nCalls = 0;
-    mallocTime = 0;
-    offsetTime = 0;
-    compTime = 0;
-    cleanTime = 0;
-    arrayTime = 0;
-    copyTime = 0;  
-
-    numAdsorbates = 10;
+    numAdsorbates = 30;
+    
+    % Allocate CUDA arrays
+    CUDA_pointers = SetupVariables();
+    z_offset_ptr = CUDA_pointers(1);
+    x0_ptr = CUDA_pointers(2);
+    y0_ptr = CUDA_pointers(3);
+    k_squared_ptr = CUDA_pointers(4);
+    exp_v_ptr = CUDA_pointers(5);
+    exp_k_ptr = CUDA_pointers(6);
+    psi_ptr = CUDA_pointers(7);
     
     custompaths= true;
     pathfile="brownianpaths.txt";
-    
     
     % Use integers for loop equality test. CARE: round will give you closest # to tFinish/dt and might be floor or ceiling value
     numIterations = round(tFinish/dt0);
@@ -155,11 +152,19 @@ function WavepacketPropagation_beta4_2
     dt = dt0;
     t = tStart;
    
-
     it = 1;
         
+    % Compute the value of expK
+    % This is constant unless the value of dt is changed
+    expK = exp((-1i*dt/hBar)*(-hBar^2*-kSquared/(2*mass)));
+    compute_expk(exp_k_ptr, k_squared_ptr, hBar, dt, mass, kSquared, nx*ny*nz);
+    cmp_complex_matlab_CUDA(expK, exp_k_ptr, 1e-7, nx, ny, nz);
     
     % Loop iteratively until tFinish reached
+    standardTime = 0.0;
+    cudaTime = 0.0;
+    nCalls = 0;
+    
     while(it <= numIterations)  
         % Total probability
         totProb = sum(sum(sum(psi.*conj(psi))));
@@ -172,6 +177,7 @@ function WavepacketPropagation_beta4_2
             % Notify user if necessary. it - 1 as step is NOT complete yet. it - 1 is complete.
             if notifySteps > 0 && mod(it - 1, notifySteps)== 0
                 fprintf(1, 'Step %d complete (%.3f ps, %.3f s): propagate wpkt (unitarity %.7f)\n', it - 1, t/ps, toc, totProb);
+                fprintf("%.3f %.3f x%.3f\n", standardTime, cudaTime, standardTime / cudaTime);
             end
             
             % Produce graphics if asked and if correct # of steps has passed
@@ -201,26 +207,13 @@ function WavepacketPropagation_beta4_2
                     psi = SplitOperatorStep_exp_3rdOrder_VSplit();
                 case 5
                     tic;
-                    psi = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t, V_ptr, z_offset_ptr, x0_ptr, y0_ptr, expV_ptr, expK_ptr, expK, psi_ptr);
+                    psi = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t, expK);
                     standardTime = standardTime + toc;
-                    
-                    for k=1:nz
-                        for i=1:nx
-                            for j=1:ny
-                                fprintf("(%e + i*%e) ", real(psi(i, j, k)), imag(psi(i, j, k)));
-                            end
-                            fprintf("\n");
-                        end
-                        fprintf("\n");
-                    end
 
                     tic;
-                    fprintf("%d)  %e \n", nCalls+1, t);
-                    mex_split_operator_step_3rd_vsplit_time_dependent(t, expV_ptr, z_offset_ptr, x0_ptr, y0_ptr, expK_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, gather(gaussianPositionsTimes), gather(gaussianPositions), dx, dy, dz);
-                    print_complex_CUDA_array(psi_ptr, nx, ny, nz);
+                    mex_split_operator_step_3rd_vsplit_time_dependent(t, exp_v_ptr, z_offset_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, gather(gaussianPositions), dx, dy, dz, it);
                     cudaTime = cudaTime + toc;
                     nCalls = nCalls + 1;
-                    error('bla')
             end
             % Iteration it complete. t is now t + dt
             t = t + dt;

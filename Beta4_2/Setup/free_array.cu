@@ -1,6 +1,7 @@
 #include <mex.h>
 
 #include "helper.h"
+#include "../MEX_helpers/cuda_helper.h"
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     // Get how many C and CUDA arrays are to be freed
@@ -25,6 +26,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         double *pointer = int_to_pointer(cuda_arrays[i]);
 
         // Free the pointer
-        cudaFree(pointer);
+        CUDA_HANDLE(cudaFree(pointer));
     }
 }

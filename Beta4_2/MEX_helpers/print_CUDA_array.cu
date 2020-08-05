@@ -13,7 +13,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
 	double *dev_potential = reinterpret_cast<double *>(potential_ptr);
 	double *potential = reinterpret_cast<double *>(malloc(nx * ny * nz * sizeof(double)));
-	cudaMemcpy(potential, dev_potential, nx * ny * nz * sizeof(double), cudaMemcpyDeviceToHost);
+	CUDA_HANDLE(cudaMemcpy(potential, dev_potential, nx * ny * nz * sizeof(double), cudaMemcpyDeviceToHost));
 
 	for (int k=0; k<nz; k++) {
 		for (int i=0; i<nx; i++) {

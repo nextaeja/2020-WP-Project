@@ -35,11 +35,7 @@ function SetupBrownianMotionGaussians(displayAdsorbateAnimation, realTimePlottin
             % Do integration
             [t, y] = ode45(@(t,y) RandomMotionDifferentialEquation(t,y, xi, xi_t, gamma, m), [tStart tFinish+dt0], y0);%adding dt0s due to overuse of interp1
 
-<<<<<<< HEAD
             xtQuery = linspace(tStart, tFinish, numIterations+1);
-=======
-            xtQuery = linspace(tStart, tFinish, gaussianPositionsDiv);
->>>>>>> Added interpolation function for adsorbate position
             xQuery = interp1(t, y(:,1), xtQuery);
             
             gaussianPositions(adsorbateNum, dimNum, :) = xQuery;
