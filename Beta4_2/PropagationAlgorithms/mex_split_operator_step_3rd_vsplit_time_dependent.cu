@@ -5,10 +5,9 @@
 
 #include "../MEX_helpers/complex.h"
 #include "../MEX_helpers/cuda_helper.h"
-#include "../MEX_helpers/interpolation1d.h"
 #include "../Setup/cuda_setup_dynamic_potential.h"
 
-#define NDIMS 3
+const int NUM_GAUSSIAN_ADSORBATE_DIMENSIONS = 2;
 
 __global__ void update_adsorbate_position(double *all_positions, double *dev_x0, double *dev_y0, int iteration, int num_adsorbates);
 __device__ __host__ double _get_gaussian_adsorbate(double *data, int idx, int dim, int adsorbate, int num_adsorbates);
@@ -64,27 +63,25 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	double t_query = mxGetScalar(prhs[0]);
 	long long expv_ptr = mxGetScalar(prhs[1]);
 	long long z_offset_ptr = mxGetScalar(prhs[2]);
-	long long x0_ptr = mxGetScalar(prhs[3]);
-	long long y0_ptr = mxGetScalar(prhs[4]);
-	long long expk_ptr = mxGetScalar(prhs[5]);
-	long long psi_ptr = mxGetScalar(prhs[6]);
-	int nx = mxGetScalar(prhs[7]);
-	int ny = mxGetScalar(prhs[8]);
-	int nz = mxGetScalar(prhs[9]);
-	int decay_type = mxGetScalar(prhs[10]);
-	double A = mxGetScalar(prhs[11]);
-	double eV = mxGetScalar(prhs[12]);
-	double h_bar = mxGetScalar(prhs[13]);
-	double dt = mxGetScalar(prhs[14]);
-	double *gaussian_positions = mxGetPr(prhs[15]);
+	long long gauss_pos_ptr = mxGetScalar(prhs[3]);
+	long long x0_ptr = mxGetScalar(prhs[4]);
+	long long y0_ptr = mxGetScalar(prhs[5]);
+	long long expk_ptr = mxGetScalar(prhs[6]);
+	long long psi_ptr = mxGetScalar(prhs[7]);
+	int nx = mxGetScalar(prhs[8]);
+	int ny = mxGetScalar(prhs[9]);
+	int nz = mxGetScalar(prhs[10]);
+	int decay_type = mxGetScalar(prhs[11]);
+	double A = mxGetScalar(prhs[12]);
+	double eV = mxGetScalar(prhs[13]);
+	double h_bar = mxGetScalar(prhs[14]);
+	double dt = mxGetScalar(prhs[15]);
 	double dx = mxGetScalar(prhs[16]);
 	double dy = mxGetScalar(prhs[17]);
 	double dz = mxGetScalar(prhs[18]);
 	int iteration = mxGetScalar(prhs[19]);
 
 	double expv_scale = -dt / (2 * h_bar);
-
-	size_t total, free;
 
 	// Calculate grid size
 	size_t grid_size = nx * ny * nz;
@@ -95,16 +92,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	// Parse the pointers
 	myComplex *dev_expv = reinterpret_cast<myComplex *>(expv_ptr);
 	double *dev_z_offset = reinterpret_cast<double *>(z_offset_ptr);
+	double *dev_gauss_pos = reinterpret_cast<double *>(gauss_pos_ptr);
 	double *dev_x0 = reinterpret_cast<double *>(x0_ptr);
 	double *dev_y0 = reinterpret_cast<double *>(y0_ptr);
 	myComplex *dev_expk = reinterpret_cast<myComplex *>(expk_ptr);
 	myComplex *dev_psi = reinterpret_cast<myComplex *>(psi_ptr);
-
-	// Copy the adsorbate position and times into GPU
-	// TODO: move this out of this function. Only execute at beginning
-	double *dev_gauss_pos;
-	CUDA_HANDLE(cudaMallocManaged(reinterpret_cast<void **>(&dev_gauss_pos), gauss_dims[0] * gauss_dims[1] * gauss_dims[2] * sizeof(double)));
-	CUDA_HANDLE(cudaMemcpy(dev_gauss_pos, gaussian_positions, gauss_dims[0] * gauss_dims[1] * gauss_dims[2] * sizeof(double), cudaMemcpyHostToDevice));
 
 	// Plan the FFT
 	cufftHandle forward_plan, inverse_plan;
@@ -127,7 +119,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
 	CUDAFFT_HANDLE(cufftDestroy(forward_plan));
 	CUDAFFT_HANDLE(cufftDestroy(inverse_plan));
-	CUDA_HANDLE(cudaFree(dev_gauss_pos));
 }
 
 __global__ void update_adsorbate_position(double *all_positions, double *dev_x0, double *dev_y0, int iteration, int num_adsorbates) {

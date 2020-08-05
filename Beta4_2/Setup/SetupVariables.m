@@ -1,6 +1,6 @@
 function CUDA_pointers = SetupVariables()
     global lx ly lz nx ny nz; % Needed to run function
-    global dx dy dz kSquared numAdsorbates; % Set in function
+    global dx dy dz kSquared numAdsorbates numIterations; % Set in function
     
     % Distance between each grid point. Units = m
     dx = lx/nx;
@@ -10,5 +10,5 @@ function CUDA_pointers = SetupVariables()
     % k-space setup
     kSquared = KSquared();
     
-    CUDA_pointers = allocate_all_arrays(nx, ny, nz, numAdsorbates);
+    CUDA_pointers = allocate_all_arrays(nx, ny, nz, numAdsorbates, numIterations);
 end

@@ -6,7 +6,7 @@
 #include "../MEX_helpers/complex.h"
 #include "../MEX_helpers/cuda_helper.h"
 
-#define N_POINTERS 7
+#define N_POINTERS 8
 
 __global__ void initialize_array(double *array, size_t size) {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
@@ -36,12 +36,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	size_t ny = mxGetScalar(prhs[1]);
 	size_t nz = mxGetScalar(prhs[2]);
 	int num_adsorbates = mxGetScalar(prhs[3]);
+    int num_iterations = mxGetScalar(prhs[4]);
 	num_adsorbates = (num_adsorbates < 1) ? 1 : num_adsorbates;
 
 	double *z_offset;
 	double *dev_x0;
 	double *dev_y0;
 	double *kSquared;
+    double *gaussian_positions;
 	myComplex *exp_v;
 	myComplex *exp_k;
     myComplex *psi;
@@ -51,6 +53,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	CUDA_HANDLE(cudaMallocManaged(reinterpret_cast<void **>(&dev_x0), num_adsorbates * sizeof(double)));
 	CUDA_HANDLE(cudaMallocManaged(reinterpret_cast<void **>(&dev_y0), num_adsorbates * sizeof(double)));
 	CUDA_HANDLE(cudaMallocManaged(reinterpret_cast<void **>(&kSquared), nx * ny * nz * sizeof(double)));
+    CUDA_HANDLE(cudaMallocManaged(reinterpret_cast<void **>(&gaussian_positions), num_adsorbates * 2 * num_iterations * sizeof(double)));
 
 	// This data is complex
 	CUDA_HANDLE(cudaMallocManaged(reinterpret_cast<void **>(&exp_v), nx * ny * nz * sizeof(myComplex)));
@@ -62,6 +65,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	initialize_array<<<NUM_BLOCKS, NUM_THREADS>>>(dev_x0, num_adsorbates);
 	initialize_array<<<NUM_BLOCKS, NUM_THREADS>>>(dev_y0, num_adsorbates);
 	initialize_array<<<NUM_BLOCKS, NUM_THREADS>>>(kSquared, nx * ny * nz);
+    initialize_array<<<NUM_BLOCKS, NUM_THREADS>>>(gaussian_positions, num_adsorbates * 2 * num_iterations);
 	initialize_array<<<NUM_BLOCKS, NUM_THREADS>>>(exp_v, nx * ny * nz);
 	initialize_array<<<NUM_BLOCKS, NUM_THREADS>>>(exp_k, nx * ny * nz);
     initialize_array<<<NUM_BLOCKS, NUM_THREADS>>>(psi, nx * ny * nz);
@@ -76,4 +80,5 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	ptr_potential[4] = reinterpret_cast<long long>(exp_v);
 	ptr_potential[5] = reinterpret_cast<long long>(exp_k);
     ptr_potential[6] = reinterpret_cast<long long>(psi);
+    ptr_potential[7] = reinterpret_cast<long long>(gaussian_positions);
 }

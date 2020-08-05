@@ -24,6 +24,7 @@ function WavepacketPropagation_beta4_2
 %===SET=UP=VARIABLES====================================================================================%
     global A ps eV hBar kSquared mass nx ny nz dx dy dz lx ly lz eps tStart tFinish notifySteps gfxSteps psi psi0 dt0 dt savingSimulationRunning savingDirectory propagationMethod numAdsorbates decayType custpot zOffset pathfile Browniefile savingBrownianPaths it numIterations gaussianPositions
     
+    gpuDevice(1);
     SetupSIUnits();
     
     % Setup lengths. Units = m
@@ -32,9 +33,9 @@ function WavepacketPropagation_beta4_2
     lz = 90*A;
     
     % Setup grid - use powers of 2 for quickest FFT
-    nx = 4;
-    ny = 8;
-    nz = 2;
+    nx = 256;
+    ny = 256;
+    nz = 64;
     
     % Acceptable error in wavepacket norm
     eps = 1e-6;
@@ -52,7 +53,7 @@ function WavepacketPropagation_beta4_2
     Browniefile="brownianpaths.txt";
     
     numPsiToSave = 1;
-    numGfxToSave = 5;
+    numGfxToSave = 10;
     numSteps = round(tFinish/dt0);
     
     notifySteps = floor(numSteps/numGfxToSave);   % TODO: Change to notifytime. # steps after which to notify user of progress
@@ -70,6 +71,9 @@ function WavepacketPropagation_beta4_2
     
     numAdsorbates = 30;
     
+    % Use integers for loop equality test. CARE: round will give you closest # to tFinish/dt and might be floor or ceiling value
+    numIterations = round(tFinish/dt0);
+    
     % Allocate CUDA arrays
     CUDA_pointers = SetupVariables();
     z_offset_ptr = CUDA_pointers(1);
@@ -79,12 +83,10 @@ function WavepacketPropagation_beta4_2
     exp_v_ptr = CUDA_pointers(5);
     exp_k_ptr = CUDA_pointers(6);
     psi_ptr = CUDA_pointers(7);
+    gauss_position_ptr = CUDA_pointers(8);
     
     custompaths= true;
     pathfile="brownianpaths.txt";
-    
-    % Use integers for loop equality test. CARE: round will give you closest # to tFinish/dt and might be floor or ceiling value
-    numIterations = round(tFinish/dt0);
     
     if(~custompaths)
         SetupBrownianMotionGaussians(displayAdsorbateAnimation, realTimePlotting);%%%NaN bug caused by something in here %%% 
@@ -123,7 +125,8 @@ function WavepacketPropagation_beta4_2
     
     % Copy the initialized function into the allocated space
     % gather is necessary to pass a gpuArray into RAM
-    copy_complex_array(psi_ptr, gather(psi0), nx*ny*nz);
+    copy_CUDA_complex_array(psi_ptr, gather(psi0), nx*ny*nz);
+    copy_CUDA_array(gauss_position_ptr, gaussianPositions, numAdsorbates*2*numIterations);
     
     SetupGraphicsVariables();
 
@@ -177,7 +180,7 @@ function WavepacketPropagation_beta4_2
             % Notify user if necessary. it - 1 as step is NOT complete yet. it - 1 is complete.
             if notifySteps > 0 && mod(it - 1, notifySteps)== 0
                 fprintf(1, 'Step %d complete (%.3f ps, %.3f s): propagate wpkt (unitarity %.7f)\n', it - 1, t/ps, toc, totProb);
-                fprintf("%.3f %.3f x%.3f\n", standardTime, cudaTime, standardTime / cudaTime);
+                fprintf("MATLAB time %.3f, CUDA time %.3f, speedup x%.3f\n", standardTime, cudaTime, standardTime / cudaTime);
             end
             
             % Produce graphics if asked and if correct # of steps has passed
@@ -211,7 +214,7 @@ function WavepacketPropagation_beta4_2
                     standardTime = standardTime + toc;
 
                     tic;
-                    mex_split_operator_step_3rd_vsplit_time_dependent(t, exp_v_ptr, z_offset_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, gather(gaussianPositions), dx, dy, dz, it);
+                    mex_split_operator_step_3rd_vsplit_time_dependent(t, exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, it);
                     cudaTime = cudaTime + toc;
                     nCalls = nCalls + 1;
             end
@@ -225,17 +228,7 @@ function WavepacketPropagation_beta4_2
     % Tell user run is complete
     % Note, finalIteration = it - 1 as it starts counting at 1. t starts at 0 though, and t represents the time just after the last iteration, so tFinal = t
     fprintf('Run Complete.\nNumber of iterations = %d\nFinal simulation time = %.16e\n', it - 1, t);
-    %fprintf("MATLAB time: %.5fms\n", standardTime/nCalls*1000);
-    %fprintf("C      time: %.5fms, speedup x%.1f\n", cTime/nCalls*1000, standardTime/cTime);
-    %fprintf("CUDA   time: %.5fms, speedup x%.1f x%.1f\n", cudaTime/nCalls*1000, standardTime/cudaTime, cTime/cudaTime);
-    
-    totTime = mallocTime + offsetTime + compTime + arrayTime + copyTime + cleanTime;
-    fprintf("Malloc: %f us %.2f%%\n", mallocTime, mallocTime/totTime*100);
-    fprintf("Z offset: %f us %.2f%%\n", offsetTime, offsetTime/totTime*100);
-    fprintf("Computation: %f us %.2f%%\n", compTime, compTime/totTime*100);
-    fprintf("Output creation: %f us %.2f%%\n", arrayTime, arrayTime/totTime*100);
-    fprintf("Copy: %f us %.2f%%\n", copyTime, copyTime/totTime*100);
-    fprintf("Cleanup: %f us %.2f%%\n", cleanTime, cleanTime/totTime*100);
+    fprintf("MATLAB time %.3f, CUDA time %.3f, speedup x%.3f\n", standardTime, cudaTime, standardTime / cudaTime);
     
     % Force graphics update so psi_final is displayed
     if gfxSteps > 0
