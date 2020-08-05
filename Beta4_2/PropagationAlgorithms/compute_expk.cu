@@ -39,7 +39,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	double *dev_k_squared = reinterpret_cast<double *>(k_squared_ptr);
 
 	// k_squared is computed in MATLAB and copied over the GPU
-	cudaMemcpy(dev_k_squared, k_squared, size * sizeof(double), cudaMemcpyHostToDevice);
+	CUDA_HANDLE(cudaMemcpy(dev_k_squared, k_squared, size * sizeof(double), cudaMemcpyHostToDevice));
 
 	// Compute the argument of the exponential
 	compute_expk<<<NUM_BLOCKS, NUM_THREADS>>>(dev_expk, dev_k_squared, dt, h_bar, mass, size);

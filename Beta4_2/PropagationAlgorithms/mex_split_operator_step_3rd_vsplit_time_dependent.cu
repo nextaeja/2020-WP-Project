@@ -85,8 +85,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	double expv_scale = -dt / (2 * h_bar);
 
 	size_t total, free;
-	CUDA_HANDLE(cudaMemGetInfo(&free, &total));
-	//mexPrintf("Free: %.2lf of %.2lf (%.2lf%%)\n", free / (double) (1 << 30), total / (double) (1 << 30), free / (double) total * 100.0);
 
 	// Calculate grid size
 	size_t grid_size = nx * ny * nz;
