@@ -19,43 +19,32 @@ void split_operator_3rd_vsplit_time(myComplex *dev_psi, myComplex *dev_expv, myC
 		int nx, int ny, int nz, int decay_type, double dx, double dy, double dz, double dt) {
 	double alpha = 2.0;
 
-	/// TODO: UpdateBrownianMotionGaussians
 	setup_dynamic_gaussian_potential(dev_expv, dev_z_offset, dev_x0, dev_y0, gauss_dims[0], nx, ny, nz, decay_type, alpha, eV, A, dx, dy, dz);
-	CUDA_HANDLE(cudaDeviceSynchronize());
 
 	// Get the exponential of the potential
 	compute_expv<<<NUM_BLOCKS, NUM_THREADS>>>(dev_expv, expv_scale, size);
-	CUDA_HANDLE(cudaDeviceSynchronize());
 
 	// Apply half potential operator
 	complex_mul<<<NUM_BLOCKS, NUM_THREADS>>>(dev_psi, dev_expv, size);
-	CUDA_HANDLE(cudaDeviceSynchronize());
 
 	// Compute the forward FFT
 	CUDAFFT_HANDLE(cufftExecZ2Z(forward_plan, dev_psi, dev_psi, CUFFT_FORWARD));
-	CUDA_HANDLE(cudaDeviceSynchronize());
 
 	// apply kinetic operator
 	complex_mul<<<NUM_BLOCKS, NUM_THREADS>>>(dev_psi, dev_expk, size);
-	CUDA_HANDLE(cudaDeviceSynchronize());
 
 	// Invert FFT
 	CUDAFFT_HANDLE(cufftExecZ2Z(inverse_plan, dev_psi, dev_psi, CUFFT_INVERSE));
-	CUDA_HANDLE(cudaDeviceSynchronize());
 	complex_scale<<<NUM_BLOCKS, NUM_THREADS>>>(dev_psi, 1/(double) size, size);
-	CUDA_HANDLE(cudaDeviceSynchronize());
 
 	/// TODO: UpdateBrownianMotionGaussians
 	setup_dynamic_gaussian_potential(dev_expv, dev_z_offset, dev_x0, dev_y0, gauss_dims[0], nx, ny, nz, decay_type, alpha, eV, A, dx, dy, dz);
-	CUDA_HANDLE(cudaDeviceSynchronize());
 
 	// Get the exponential of the potential
 	compute_expv<<<NUM_BLOCKS, NUM_THREADS>>>(dev_expv, expv_scale, size);
-	CUDA_HANDLE(cudaDeviceSynchronize());
 
 	// Apply half potential operator
 	complex_mul<<<NUM_BLOCKS, NUM_THREADS>>>(dev_psi, dev_expv, size);
-	CUDA_HANDLE(cudaDeviceSynchronize());
 }
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
@@ -112,9 +101,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
 	// Compute the x and y positions of the adsorbates
 	update_adsorbate_position<<<1, gauss_dims[0]>>>(dev_gauss_pos, dev_x0, dev_y0, iteration, gauss_dims[0]);
-	CUDA_HANDLE(cudaDeviceSynchronize());
 
-	// TODO: PERFORM ACTUAL STEP
 	split_operator_3rd_vsplit_time(dev_psi, dev_expv, dev_expk, dev_x0, dev_y0, dev_z_offset, t_query, A, eV, expv_scale, grid_size, forward_plan, inverse_plan, gauss_dims, nx, ny, nz, decay_type, dx, dy, dz, dt);
 
 	CUDAFFT_HANDLE(cufftDestroy(forward_plan));
