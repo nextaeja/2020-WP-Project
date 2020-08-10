@@ -208,7 +208,7 @@ function WavepacketPropagation_beta4_2
                     psi = SplitOperatorStep_exp_3rdOrder_KSplit();
                 case 4
                     psi = SplitOperatorStep_exp_3rdOrder_VSplit();
-                case 5
+                case 5 %Test to compare non cuda and cuda versions.
                     tic;
                     psi = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t, expK);
                     standardTime = standardTime + toc;
