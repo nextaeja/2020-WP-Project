@@ -47,7 +47,7 @@ function WavepacketPropagation_beta4_2
         
     savingSimulationRunning = false;
     savingSimulationEnd = false;
-    realTimePlotting = false;
+    realTimePlotting = true;
     displayAdsorbateAnimation = false;
     savingBrownianPaths=false;
     Browniefile="brownianpaths.txt";
@@ -67,7 +67,7 @@ function WavepacketPropagation_beta4_2
     
     % Propagation method: 1 = RK4Step. 2 = Split Operator O(dt^2). 3 = Split Operator O(dt^3), K split. 4 = Sp. Op. O(dt^3), V split. 5 = Sp.Op. O(dt^3), V
     % split, time dependent.
-    propagationMethod = 5;
+    propagationMethod = 7;
     
     numAdsorbates = 30;
     
@@ -85,7 +85,7 @@ function WavepacketPropagation_beta4_2
     psi_ptr = CUDA_pointers(7);
     gauss_position_ptr = CUDA_pointers(8);
     
-    custompaths= true;
+    custompaths = true;
     pathfile="brownianpaths.txt";
     
     if(~custompaths)
@@ -217,6 +217,15 @@ function WavepacketPropagation_beta4_2
                     mex_split_operator_step_3rd_vsplit_time_dependent(t, exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, it);
                     cudaTime = cudaTime + toc;
                     nCalls = nCalls + 1;
+                case 6 %Cuda only (which doesn't seem to exist..?)
+                    tic;
+                    mex_split_operator_step_3rd_vsplit_time_dependent(t, exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, it);
+                    cudaTime = cudaTime + toc;
+                    nCalls = nCalls + 1;
+                case 7 %noncuda original iteration method
+                    tic;
+                    psi = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t, expK);
+                    standardTime = standardTime + toc;
             end
             % Iteration it complete. t is now t + dt
             t = t + dt;
