@@ -22,8 +22,9 @@ function WavepacketPropagation_beta4_2
     addpath(genpath(pwd));
     
 %===SET=UP=VARIABLES====================================================================================%
-    global A ps eV nx ny nz lx ly lz eps tStart tFinish notifySteps gfxSteps psi psi0 dt0 dt savingSimulationRunning savingDirectory propagationMethod numAdsorbates decayType custpot zOffset pathfile Browniefile savingBrownianPaths it numIterations
+    global A ps eV hBar kSquared mass nx ny nz dx dy dz lx ly lz eps tStart tFinish notifySteps gfxSteps psi psi0 dt0 dt savingSimulationRunning savingDirectory propagationMethod numAdsorbates decayType custpot zOffset pathfile Browniefile savingBrownianPaths it numIterations gaussianPositions
     
+    gpuDevice(1);
     SetupSIUnits();
     
     % Setup lengths. Units = m
@@ -32,9 +33,9 @@ function WavepacketPropagation_beta4_2
     lz = 90*A;
     
     % Setup grid - use powers of 2 for quickest FFT
-    nx = 64;
-    ny = 64;
-    nz = 256;
+    nx = 256;
+    ny = 256;
+    nz = 64;
     
     % Acceptable error in wavepacket norm
     eps = 1e-6;
@@ -46,13 +47,13 @@ function WavepacketPropagation_beta4_2
         
     savingSimulationRunning = false;
     savingSimulationEnd = false;
-    realTimePlotting = true;
+    realTimePlotting = false;
     displayAdsorbateAnimation = false;
     savingBrownianPaths=false;
     Browniefile="brownianpaths.txt";
     
     numPsiToSave = 1;
-    numGfxToSave = 5;
+    numGfxToSave = 10;
     numSteps = round(tFinish/dt0);
     
     notifySteps = floor(numSteps/numGfxToSave);   % TODO: Change to notifytime. # steps after which to notify user of progress
@@ -68,17 +69,24 @@ function WavepacketPropagation_beta4_2
     % split, time dependent.
     propagationMethod = 5;
     
-    SetupVariables();
-    
-
     numAdsorbates = 30;
-    
-    custompaths= true;
-    pathfile="brownianpaths.txt";
-    
     
     % Use integers for loop equality test. CARE: round will give you closest # to tFinish/dt and might be floor or ceiling value
     numIterations = round(tFinish/dt0);
+    
+    % Allocate CUDA arrays
+    CUDA_pointers = SetupVariables();
+    z_offset_ptr = CUDA_pointers(1);
+    x0_ptr = CUDA_pointers(2);
+    y0_ptr = CUDA_pointers(3);
+    k_squared_ptr = CUDA_pointers(4);
+    exp_v_ptr = CUDA_pointers(5);
+    exp_k_ptr = CUDA_pointers(6);
+    psi_ptr = CUDA_pointers(7);
+    gauss_position_ptr = CUDA_pointers(8);
+    
+    custompaths= true;
+    pathfile="brownianpaths.txt";
     
     if(~custompaths)
         SetupBrownianMotionGaussians(displayAdsorbateAnimation, realTimePlotting);%%%NaN bug caused by something in here %%% 
@@ -115,6 +123,11 @@ function WavepacketPropagation_beta4_2
     % Initialises psi0
     SetupInitialWavefunction();
     
+    % Copy the initialized function into the allocated space
+    % gather is necessary to pass a gpuArray into RAM
+    copy_CUDA_complex_array(psi_ptr, gather(psi0), nx*ny*nz);
+    copy_CUDA_array(gauss_position_ptr, gaussianPositions, numAdsorbates*2*numIterations);
+    
     SetupGraphicsVariables();
 
 %===SET=UP=COMPLETE=====================================================================================%
@@ -142,11 +155,19 @@ function WavepacketPropagation_beta4_2
     dt = dt0;
     t = tStart;
    
-
     it = 1;
         
+    % Compute the value of expK
+    % This is constant unless the value of dt is changed
+    expK = exp((-1i*dt/hBar)*(-hBar^2*-kSquared/(2*mass)));
+    compute_expk(exp_k_ptr, k_squared_ptr, hBar, dt, mass, kSquared, nx*ny*nz);
+    cmp_complex_matlab_CUDA(expK, exp_k_ptr, 1e-7, nx, ny, nz);
     
     % Loop iteratively until tFinish reached
+    standardTime = 0.0;
+    cudaTime = 0.0;
+    nCalls = 0;
+    
     while(it <= numIterations)  
         % Total probability
         totProb = sum(sum(sum(psi.*conj(psi))));
@@ -159,6 +180,7 @@ function WavepacketPropagation_beta4_2
             % Notify user if necessary. it - 1 as step is NOT complete yet. it - 1 is complete.
             if notifySteps > 0 && mod(it - 1, notifySteps)== 0
                 fprintf(1, 'Step %d complete (%.3f ps, %.3f s): propagate wpkt (unitarity %.7f)\n', it - 1, t/ps, toc, totProb);
+                fprintf("MATLAB time %.3f, CUDA time %.3f, speedup x%.3f\n", standardTime, cudaTime, standardTime / cudaTime);
             end
             
             % Produce graphics if asked and if correct # of steps has passed
@@ -176,6 +198,7 @@ function WavepacketPropagation_beta4_2
             end
             
 %===========STEP=FORWARD================================================================================%
+            
             switch propagationMethod
                 case 1
                     psi = RK4Step();
@@ -186,7 +209,14 @@ function WavepacketPropagation_beta4_2
                 case 4
                     psi = SplitOperatorStep_exp_3rdOrder_VSplit();
                 case 5
-                    psi = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t);
+                    tic;
+                    psi = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t, expK);
+                    standardTime = standardTime + toc;
+
+                    tic;
+                    mex_split_operator_step_3rd_vsplit_time_dependent(t, exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, it);
+                    cudaTime = cudaTime + toc;
+                    nCalls = nCalls + 1;
             end
             % Iteration it complete. t is now t + dt
             t = t + dt;
@@ -198,6 +228,7 @@ function WavepacketPropagation_beta4_2
     % Tell user run is complete
     % Note, finalIteration = it - 1 as it starts counting at 1. t starts at 0 though, and t represents the time just after the last iteration, so tFinal = t
     fprintf('Run Complete.\nNumber of iterations = %d\nFinal simulation time = %.16e\n', it - 1, t);
+    fprintf("MATLAB time %.3f, CUDA time %.3f, speedup x%.3f\n", standardTime, cudaTime, standardTime / cudaTime);
     
     % Force graphics update so psi_final is displayed
     if gfxSteps > 0
@@ -208,4 +239,7 @@ function WavepacketPropagation_beta4_2
     if(savingSimulationRunning || savingSimulationEnd)
        SaveSimulationEndData(t, it - 1);
     end
+    
+    % Free previously allocated memory in MEX files
+    free_array(0, size(CUDA_pointers, 2), [], CUDA_pointers);
 end

@@ -1,7 +1,7 @@
 % Split Operator - O(dt^3) - V split
 % TODO: Update for time varying V
-function psiStepped = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t)
-    global psi V mass hBar kSquared dt decayType A eV ps ;
+function psiStepped = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t, expK)
+    global psi V hBar dt decayType A eV;
    
     %decayType = 2; %%% 1 = exponential repulsive. 2 = Morse attractive. 3 = Morse-like (needs alpha parameter input too!)
     alpha = 2; % Only needed for Morse-like potential. alpha = 2 gives Morse potential. alpha = 0 gives exponential potential.
@@ -14,17 +14,16 @@ function psiStepped = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t)
     UpdateBrownianMotionGaussians(decayType, alpha, xSigma, ySigma, gaussPeakVal, wellDepth, t);
     
     expV = exp((-1i*(dt/2)/hBar)*V);
-    expK = exp((-1i*dt/hBar)*(-hBar^2*-kSquared/(2*mass)));
     
     psiVStepHalf = expV.*psi;
     psiVStepHalfFT = fftn(psiVStepHalf);
     psiKStepFT = expK.*psiVStepHalfFT;
     psiKStep = ifftn(psiKStepFT);
-    
+
     %%%%TODO:INTESTIGATE%SPLITTING%TIMES-V(dt)%vs%V(dt/2)%etc...%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Update potential V to V(t + dt) - see http://phys.au.dk/fileadmin/site_files/quscope/Haru_split_operator.pdf
-    UpdateBrownianMotionGaussians(decayType, alpha, xSigma, ySigma, gaussPeakVal, wellDepth, t + dt);
-    expV = exp((-1i*(dt/2)/hBar)*V);
+    UpdateBrownianMotionGaussians(decayType, alpha, xSigma, ySigma, gaussPeakVal, wellDepth, t+dt);
+    expV = exp((-1i*(dt/2)/hBar)*V);    
     
     psiVStep = expV.*psiKStep;
     
