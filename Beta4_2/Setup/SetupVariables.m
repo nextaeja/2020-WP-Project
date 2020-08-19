@@ -10,5 +10,7 @@ function CUDA_pointers = SetupVariables()
     % k-space setup
     kSquared = KSquared();
     
+    %allocate_all_arrays is a mex function which initializes the arrays in CUDA using the
+    %matlab input parameters.
     CUDA_pointers = allocate_all_arrays(nx, ny, nz, numAdsorbates, numIterations);
 end

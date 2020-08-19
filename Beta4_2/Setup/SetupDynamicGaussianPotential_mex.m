@@ -123,3 +123,17 @@ end
 function potentialVal = morseLikePotential(z, wellDepth, wellMinZPt, a, alpha)
     potentialVal = wellDepth*(exp(-2*a*(z - wellMinZPt)) - alpha*exp(-a*(z - wellMinZPt)));
 end
+function zEffective3D = specPotwrap(zEffective3D,zOffset)
+    global custpot dz nx ny nz
+    len= length(custpot);
+
+    function potentialVal = specPotential(z)
+       ind=round((z-zOffset)/(dz))+1; %%%
+       if(0<ind && ind<=len)
+          potentialVal= custpot(ind);
+       else
+           potentialVal=0;
+       end
+    end  
+    zEffective3D = arrayfun(@specPotential, zEffective3D);
+end

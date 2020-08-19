@@ -24,7 +24,10 @@ function WavepacketPropagation_beta4_2
 %===SET=UP=VARIABLES====================================================================================%
     global A ps eV hBar kSquared mass nx ny nz dx dy dz lx ly lz eps tStart tFinish notifySteps gfxSteps psi psi0 dt0 dt savingSimulationRunning savingDirectory propagationMethod numAdsorbates decayType custpot zOffset pathfile Browniefile savingBrownianPaths it numIterations gaussianPositions
     
+    %Change to specify alternative GPU devices if machine contains more than one
     gpuDevice(1);
+    
+    %initializees SI units (feels excessive tbh)
     SetupSIUnits();
     
     % Setup lengths. Units = m
@@ -33,8 +36,8 @@ function WavepacketPropagation_beta4_2
     lz = 90*A;
     
     % Setup grid - use powers of 2 for quickest FFT
-    nx = 256;
-    ny = 256;
+    nx = 128;
+    ny = 128;
     nz = 64;
     
     % Acceptable error in wavepacket norm
@@ -56,6 +59,15 @@ function WavepacketPropagation_beta4_2
     numGfxToSave = 10;
     numSteps = round(tFinish/dt0);
     
+    % Propagation method: 1 = RK4Step. 2 = Split Operator O(dt^2). 3 = Split Operator O(dt^3), K split. 4 = Sp. Op. O(dt^3), V split. 5 = Sp.Op. O(dt^3), V
+    % split, time dependent.
+    propagationMethod = 7;
+    
+    numAdsorbates = 30;
+    
+    custompaths = false;
+    pathfile="brownianpaths.txt";
+    
     notifySteps = floor(numSteps/numGfxToSave);   % TODO: Change to notifytime. # steps after which to notify user of progress
     psiSaveSteps = floor(numSteps/numPsiToSave);
     
@@ -64,12 +76,6 @@ function WavepacketPropagation_beta4_2
     else
         gfxSteps = 0;
     end
-    
-    % Propagation method: 1 = RK4Step. 2 = Split Operator O(dt^2). 3 = Split Operator O(dt^3), K split. 4 = Sp. Op. O(dt^3), V split. 5 = Sp.Op. O(dt^3), V
-    % split, time dependent.
-    propagationMethod = 7;
-    
-    numAdsorbates = 30;
     
     % Use integers for loop equality test. CARE: round will give you closest # to tFinish/dt and might be floor or ceiling value
     numIterations = round(tFinish/dt0);
@@ -85,8 +91,6 @@ function WavepacketPropagation_beta4_2
     psi_ptr = CUDA_pointers(7);
     gauss_position_ptr = CUDA_pointers(8);
     
-    custompaths = true;
-    pathfile="brownianpaths.txt";
     
     if(~custompaths)
         SetupBrownianMotionGaussians(displayAdsorbateAnimation, realTimePlotting);%%%NaN bug caused by something in here %%% 
@@ -96,8 +100,7 @@ function WavepacketPropagation_beta4_2
    
     %SetupZeroPotential();
     %SetupWedgePotential();
-    decayType = 3; % 1 = exponential repulsive. 2 = Morse attractive. 3 = Morse-like (needs alpha parameter input too!). 4=custom
-    
+    decayType = 1; % 1 = exponential repulsive. 2 = Morse attractive. 3 = Morse-like (needs alpha parameter input too!). 4=custom
     zOffset = -5*A; % Shift entire V away from boundary to stop Q.Tunneling through V %%% or to make custom potential go all the way to the surface
     
     potfile="potential.txt"; %for 4, text file containing floats for real and imaginary part of potential, seperated by lz. potential should be high to prevent tunelling over cyclic boundary  
@@ -112,7 +115,6 @@ function WavepacketPropagation_beta4_2
        custpot = fscanf(f,'%f'); 
        fclose(f);
     end
-    
     
     % it = iteration. Starts at 0, represents the iteration CURRENTLY being carried out.
     it = 0;
