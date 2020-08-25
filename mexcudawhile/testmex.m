@@ -1,0 +1,2 @@
+%mexcuda("mexcudawhile.c");
+mexcuda("C:\Users\jackl\Documents\MATLAB\summer 2020\2020-WP-Project-6_optimizing_setup_dynamic_gaussian_potential\Beta4_2\PropagationAlgorithms\mex_split_operator_step_3rd_vsplit_time_dependent.cu");

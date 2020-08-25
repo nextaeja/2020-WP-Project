@@ -1,0 +1,21 @@
+38689439744//exp_v_ptr
+38654705664//z_offset_ptr
+38655033344//gauss_position_ptr
+38654902272//x0_ptr
+38654967808//y0_ptr
+38756679680//exp_k_ptr
+38823919616//psi_ptr
+64 //nx
+64 //ny
+64 //nz
+4 //decay type
+e-10//A
+1.60217662e-19//eV
+1.054571817e-34//hbar
+0.01 //dt (ps)
+90 //dx (A)
+90 //dy (A)
+90 //dz (A)
+1200 //gfxsteps
+0 //t (ps)
+2.0 //alpha
