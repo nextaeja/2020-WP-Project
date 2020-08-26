@@ -15,11 +15,11 @@ __global__ void compute_expv(myComplex *dev_expv, double scale, size_t size);
 
 void split_operator_3rd_vsplit_time(myComplex *dev_psi, myComplex *dev_expv, myComplex *dev_expk,
 		double *dev_x0, double *dev_y0, double *dev_z_offset, double t_query, double A, double eV,
-		double expv_scale, size_t size, cufftHandle forward_plan, cufftHandle inverse_plan, const mwSize *gauss_dims,
+		double expv_scale, size_t size, cufftHandle forward_plan, cufftHandle inverse_plan, int num_adsorbates,
 		int nx, int ny, int nz, int decay_type, double dx, double dy, double dz, double dt) {
 	double alpha = 2.0;
 
-	setup_dynamic_gaussian_potential(dev_expv, dev_z_offset, dev_x0, dev_y0, gauss_dims[0], nx, ny, nz, decay_type, alpha, eV, A, dx, dy, dz);
+	setup_dynamic_gaussian_potential(dev_expv, dev_z_offset, dev_x0, dev_y0, num_adsorbates, nx, ny, nz, decay_type, alpha, eV, A, dx, dy, dz);
 
 	// Get the exponential of the potential
 	compute_expv<<<NUM_BLOCKS, NUM_THREADS>>>(dev_expv, expv_scale, size);
@@ -38,7 +38,7 @@ void split_operator_3rd_vsplit_time(myComplex *dev_psi, myComplex *dev_expv, myC
 	complex_scale<<<NUM_BLOCKS, NUM_THREADS>>>(dev_psi, 1/(double) size, size);
 
 	/// TODO: UpdateBrownianMotionGaussians
-	setup_dynamic_gaussian_potential(dev_expv, dev_z_offset, dev_x0, dev_y0, gauss_dims[0], nx, ny, nz, decay_type, alpha, eV, A, dx, dy, dz);
+	setup_dynamic_gaussian_potential(dev_expv, dev_z_offset, dev_x0, dev_y0, num_adsorbates, nx, ny, nz, decay_type, alpha, eV, A, dx, dy, dz);
 
 	// Get the exponential of the potential
 	compute_expv<<<NUM_BLOCKS, NUM_THREADS>>>(dev_expv, expv_scale, size);
@@ -69,14 +69,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	double dy = mxGetScalar(prhs[17]);
 	double dz = mxGetScalar(prhs[18]);
 	int iteration = mxGetScalar(prhs[19]);
+	int num_adsorbates = mxGetScalar(prhs[20]);
 
 	double expv_scale = -dt / (2 * h_bar);
 
 	// Calculate grid size
 	size_t grid_size = nx * ny * nz;
-
-	// Get number adsorbates
-	const mwSize *gauss_dims = mxGetDimensions(prhs[15]);
 
 	// Parse the pointers
 	myComplex *dev_expv = reinterpret_cast<myComplex *>(expv_ptr);
@@ -100,9 +98,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 	CUDAFFT_HANDLE(cufftPlanMany(&inverse_plan, 3, n, onembed, ostride, odist, inembed, istride, idist, CUFFT_Z2Z, 1));
 
 	// Compute the x and y positions of the adsorbates
-	update_adsorbate_position<<<1, gauss_dims[0]>>>(dev_gauss_pos, dev_x0, dev_y0, iteration, gauss_dims[0]);
+	update_adsorbate_position<<<1, num_adsorbates>>>(dev_gauss_pos, dev_x0, dev_y0, iteration, num_adsorbates);
 
-	split_operator_3rd_vsplit_time(dev_psi, dev_expv, dev_expk, dev_x0, dev_y0, dev_z_offset, t_query, A, eV, expv_scale, grid_size, forward_plan, inverse_plan, gauss_dims, nx, ny, nz, decay_type, dx, dy, dz, dt);
+	split_operator_3rd_vsplit_time(dev_psi, dev_expv, dev_expk, dev_x0, dev_y0, dev_z_offset, t_query, A, eV, expv_scale, grid_size, forward_plan, inverse_plan, num_adsorbates, nx, ny, nz, decay_type, dx, dy, dz, dt);
 
 	CUDAFFT_HANDLE(cufftDestroy(forward_plan));
 	CUDAFFT_HANDLE(cufftDestroy(inverse_plan));
