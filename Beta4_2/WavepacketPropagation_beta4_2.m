@@ -21,6 +21,7 @@ function WavepacketPropagation_beta4_2
     % genpath gets paths to all folders in this folder
     addpath(genpath(pwd));
     
+    
 %===SET=UP=VARIABLES====================================================================================%
     global A ps eV hBar kSquared mass nx ny nz dx dy dz lx ly lz eps tStart tFinish notifySteps gfxSteps psi psi0 dt0 dt savingSimulationRunning savingDirectory propagationMethod numAdsorbates decayType custpot zOffset pathfile Browniefile savingBrownianPaths it numIterations gaussianPositions
     
@@ -67,7 +68,7 @@ function WavepacketPropagation_beta4_2
     
     % Propagation method: 1 = RK4Step. 2 = Split Operator O(dt^2). 3 = Split Operator O(dt^3), K split. 4 = Sp. Op. O(dt^3), V split. 5 = Sp.Op. O(dt^3), V
     % split, time dependent.
-    propagationMethod = 7;
+    propagationMethod = 5;
     
     numAdsorbates = 30;
     
@@ -215,6 +216,7 @@ function WavepacketPropagation_beta4_2
 
                     tic;
                     mex_split_operator_step_3rd_vsplit_time_dependent(t, exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, it, numAdsorbates, numIterations);
+                    mex_psi = copy_from_CUDA_complex(psi_ptr, nx, ny, nz);
                     cudaTime = cudaTime + toc;
                     nCalls = nCalls + 1;
                 case 6 %Cuda only (which doesn't seem to exist..?)
