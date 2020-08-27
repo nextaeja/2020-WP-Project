@@ -21,7 +21,6 @@ function WavepacketPropagation_beta4_2
     % genpath gets paths to all folders in this folder
     addpath(genpath(pwd));
     
-    
 %===SET=UP=VARIABLES====================================================================================%
     global A ps eV hBar kSquared mass nx ny nz dx dy dz lx ly lz eps tStart tFinish notifySteps gfxSteps psi psi0 dt0 dt savingSimulationRunning savingDirectory propagationMethod numAdsorbates decayType custpot zOffset pathfile Browniefile savingBrownianPaths it numIterations gaussianPositions
     
@@ -34,9 +33,9 @@ function WavepacketPropagation_beta4_2
     lz = 90*A;
     
     % Setup grid - use powers of 2 for quickest FFT
-    nx = 256;
-    ny = 256;
-    nz = 64;
+    nx = 128;
+    ny = 128;
+    nz = 256;
     
     % Acceptable error in wavepacket norm
     eps = 1e-6;
@@ -54,21 +53,21 @@ function WavepacketPropagation_beta4_2
     Browniefile="brownianpaths.txt";
     
     numPsiToSave = 1;
-    numGfxToSave = 10;
+    numGfxToSave = 1;
     numSteps = round(tFinish/dt0);
     
     notifySteps = floor(numSteps/numGfxToSave);   % TODO: Change to notifytime. # steps after which to notify user of progress
     psiSaveSteps = floor(numSteps/numPsiToSave);
     
-    if realTimePlotting
+    if realTimePlotting&&(numGfxToSave ~=0)
         gfxSteps = floor(numSteps/numGfxToSave);      % TODO: Change to gfxtime # steps after which, update graphics
     else
-        gfxSteps = 0;
+        gfxSteps = numSteps;
     end
     
     % Propagation method: 1 = RK4Step. 2 = Split Operator O(dt^2). 3 = Split Operator O(dt^3), K split. 4 = Sp. Op. O(dt^3), V split. 5 = Sp.Op. O(dt^3), V
     % split, time dependent.
-    propagationMethod = 5;
+    propagationMethod = 6;
     
     numAdsorbates = 30;
     
@@ -167,7 +166,39 @@ function WavepacketPropagation_beta4_2
     % Loop iteratively until tFinish reached
     standardTime = 0.0;
     cudaTime = 0.0;
-    nCalls = 0;
+    %nCalls = 0;
+    t=tStart
+    if(propagationMethod==6)
+        for i=1:numGfxToSave
+
+            mexcudawhile(exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, gfxSteps,t,alpha);%possibly add epsilon          
+            
+            it=i*numIterations/numGfxToSave;
+            t=it*dt+tStart;
+            if(realTimePlotting)  
+                UpdateGraphics(t, it)  %does this work with C stuff yet?
+                if savingSimulationRunning
+                    SaveSimulationRunning(t);
+                end
+            end
+        end
+    else
+        
+    if(propagationMethod==8) %non-mex version
+        for i=1:numGfxToSave
+
+            %nonmexcudawhile();         
+            
+            it=i*numIterations/numGfxToSave;
+            t=it*dt+tStart;
+            if(realTimePlotting)  
+                UpdateGraphics(t, it)  %does this work with C stuff yet?
+                if savingSimulationRunning
+                    SaveSimulationRunning(t);
+                end
+            end
+        end
+    else
     
     while(it <= numIterations)  
         % Total probability
@@ -215,15 +246,16 @@ function WavepacketPropagation_beta4_2
                     standardTime = standardTime + toc;
 
                     tic;
-                    mex_split_operator_step_3rd_vsplit_time_dependent(t, exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, it, numAdsorbates, numIterations);
-                    mex_psi = copy_from_CUDA_complex(psi_ptr, nx, ny, nz);
+                    mex_split_operator_step_3rd_vsplit_time_dependent(t, exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, it);
                     cudaTime = cudaTime + toc;
                     nCalls = nCalls + 1;
+                %{
                 case 6 %Cuda only (which doesn't seem to exist..?)
                     tic;
-                    mex_split_operator_step_3rd_vsplit_time_dependent(t, exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, it, numAdsorbates, numIterations);
+                    mex_split_operator_step_3rd_vsplit_time_dependent(t, exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, it);
                     cudaTime = cudaTime + toc;
                     nCalls = nCalls + 1;
+                    %}
                 case 7 %noncuda original iteration method
                     tic;
                     psi = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t, expK);
@@ -236,6 +268,8 @@ function WavepacketPropagation_beta4_2
             it = it + 1;
         end
     end %While
+    end
+    %}
     % Tell user run is complete
     % Note, finalIteration = it - 1 as it starts counting at 1. t starts at 0 though, and t represents the time just after the last iteration, so tFinal = t
     fprintf('Run Complete.\nNumber of iterations = %d\nFinal simulation time = %.16e\n', it - 1, t);
@@ -252,5 +286,15 @@ function WavepacketPropagation_beta4_2
     end
     
     % Free previously allocated memory in MEX files
+    %{
+    exp_v_ptr
+    z_offset_ptr
+    gauss_position_ptr
+    x0_ptr
+    y0_ptr
+    exp_k_ptr
+    psi_ptr
+    %}
+    
     free_array(0, size(CUDA_pointers, 2), [], CUDA_pointers);
 end
