@@ -183,22 +183,7 @@ function WavepacketPropagation_beta4_2
             end
         end
     else
-        
-    if(propagationMethod==8) %non-mex version
-        for i=1:numGfxToSave
 
-            %nonmexcudawhile();         
-            
-            it=i*numIterations/numGfxToSave;
-            t=it*dt+tStart;
-            if(realTimePlotting)  
-                UpdateGraphics(t, it)  %does this work with C stuff yet?
-                if savingSimulationRunning
-                    SaveSimulationRunning(t);
-                end
-            end
-        end
-    else
     
     while(it <= numIterations)  
         % Total probability
