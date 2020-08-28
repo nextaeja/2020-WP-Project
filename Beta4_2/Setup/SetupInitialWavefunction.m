@@ -11,7 +11,7 @@ function SetupInitialWavefunction()
     theta = 0;              % Theta angle of wavepacket normal
     phi = 0;                % Phi angle of wavepacket normal
     mass = 3.0160293*amu;   % Units = kg
-    vel = 800;             % m/s
+    vel = -800;             % m/s
     
     psi0 = zeros(size(V), 'gpuArray');
     
