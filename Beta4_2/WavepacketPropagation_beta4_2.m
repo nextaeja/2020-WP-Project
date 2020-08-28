@@ -50,8 +50,12 @@ function WavepacketPropagation_beta4_2
     savingSimulationEnd = false;
     realTimePlotting = true;
     displayAdsorbateAnimation = false;
+    
     savingBrownianPaths=false;
-    Browniefile="brownianpaths.txt";
+    Browniefile="brownianpaths.txt"; %File to save the randomly generated path to
+    
+    custompaths= true;
+    pathfile="brownianpaths.txt"; %File of custom potential pathway.
     
     numPsiToSave = 1;
     numGfxToSave = 10;
@@ -86,8 +90,6 @@ function WavepacketPropagation_beta4_2
     psi_ptr = CUDA_pointers(7);
     gauss_position_ptr = CUDA_pointers(8);
     
-    custompaths= true;
-    pathfile="brownianpaths.txt";
     
     if(~custompaths)
         SetupBrownianMotionGaussians(displayAdsorbateAnimation, realTimePlotting);%%%NaN bug caused by something in here %%% 

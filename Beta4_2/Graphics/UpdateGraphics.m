@@ -93,7 +93,7 @@ function UpdateGraphics(currentTime, itNumCompleted) % itNum == Iteration Number
             ylabel('x');
             
             % Add time and step number to plot title.
-            suptitle(['Time: ' num2str(currentTime, '%.16e') '. Step ' num2str(itNumCompleted) ' completed']);
+            suptitle(['Time: ' num2str(currentTime, '%.3e') '. Step ' num2str(itNumCompleted) ' completed']);
 
         else
             % 1D:
@@ -178,7 +178,7 @@ function UpdateGraphics(currentTime, itNumCompleted) % itNum == Iteration Number
             
             
             % Add time and step number to plot title. Use super title (suptitle)
-            suptitle(['Time: ' num2str(currentTime, '%.16e') '. Step ' num2str(itNumCompleted) ' completed']);
+            suptitle(['Time: ' num2str(currentTime, '%.3e') '. Step ' num2str(itNumCompleted) ' completed']);
             
         end
     end

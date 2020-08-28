@@ -63,7 +63,7 @@ function UpdateGraphics_kSpacePlots(currentTime, itNumCompleted) % itNum == Iter
             ylabel('x');
             
             % Add time and step number to plot title.
-            suptitle(['Time: ' num2str(currentTime, '%.16e') '. Step ' num2str(itNumCompleted) ' completed']);
+            suptitle(['Time: ' num2str(currentTime, '%.3e') '. Step ' num2str(itNumCompleted) ' completed']);
 
         else
             % 1D:
@@ -141,7 +141,7 @@ function UpdateGraphics_kSpacePlots(currentTime, itNumCompleted) % itNum == Iter
             
             
             % Add time and step number to plot title. Use super title (suptitle)
-            suptitle(['Time: ' num2str(currentTime, '%.16e') '. Step ' num2str(itNumCompleted) ' completed']);
+            suptitle(['Time: ' num2str(currentTime, '%.3e') '. Step ' num2str(itNumCompleted) ' completed']);
             
         end
     end
