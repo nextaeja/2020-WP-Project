@@ -247,7 +247,7 @@ function WavepacketPropagation_beta4_2
                     standardTime = standardTime + toc;
 
                     tic;
-                    mex_split_operator_step_3rd_vsplit_time_dependent(t, exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, it,alpha, numAdsorbates, numIterations);
+                    mex_split_operator_step_3rd_vsplit_time_dependent(t, exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, it, numAdsorbates, numIterations); %currently always has alpha=2
                     mex_psi = copy_from_CUDA_complex(psi_ptr, nx, ny, nz);
                     cudaTime = cudaTime + toc;
                     nCalls = nCalls + 1;
