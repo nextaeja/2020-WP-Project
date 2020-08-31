@@ -21,7 +21,6 @@ function WavepacketPropagation_beta4_2
     % genpath gets paths to all folders in this folder
     addpath(genpath(pwd));
     
-    
 %===SET=UP=VARIABLES====================================================================================%
     global A ps eV hBar kSquared mass nx ny nz dx dy dz lx ly lz eps tStart tFinish notifySteps gfxSteps psi psi0 dt0 dt savingSimulationRunning savingDirectory propagationMethod numAdsorbates decayType custpot zOffset pathfile Browniefile savingBrownianPaths it numIterations gaussianPositions
     
@@ -36,7 +35,7 @@ function WavepacketPropagation_beta4_2
     % Setup grid - use powers of 2 for quickest FFT
     nx = 128;
     ny = 128;
-    nz = 512;
+    nz = 256;
     
     % Acceptable error in wavepacket norm
     eps = 1e-6;
@@ -50,31 +49,46 @@ function WavepacketPropagation_beta4_2
     savingSimulationEnd = false;
     realTimePlotting = true;
     displayAdsorbateAnimation = false;
-    
     savingBrownianPaths=false;
-    Browniefile="brownianpaths.txt"; %File to save the randomly generated path to
-    
-    custompaths= true;
-    pathfile="brownianpaths.txt"; %File of custom potential pathway.
+    Browniefile="brownianpaths.txt";
     
     numPsiToSave = 1;
-    numGfxToSave = 10;
+    numGfxToSave = 3;
     numSteps = round(tFinish/dt0);
+    
+    custompaths= false;
+    pathfile="brownianpaths.txt";
+    
+    % Propagation method: 1 = RK4Step. 2 = Split Operator O(dt^2). 3 = Split Operator O(dt^3), K split. 4 = Sp. Op. O(dt^3), V split. 5 = Sp.Op. O(dt^3), V
+    % split, time dependent in mex and in matlab. 6= mex while loop with Sp.Op. O(dt^3), V split, time dependent. 7= just matlab Sp.Op. O(dt^3), V split, time dependent
+    propagationMethod = 6;
+    
+    numAdsorbates = 30;
+    
+    decayType = 3; % 1 = exponential repulsive. 2 = Morse attractive. 3 = Morse-like (needs alpha parameter input too!). 4=custom
+    
+    zOffset = -5*A; % Shift entire V away from boundary to stop Q.Tunneling through V %%% or to make custom potential go all the way to the surface
+    
+    potfile="potential.txt"; %for 4, text file containing floats for real and imaginary part of potential, seperated by lz. potential should be high to prevent tunelling over cyclic boundary  
+    alpha = 2; % Only needed for Morse-like potential. alpha = 2 gives Morse potential. alpha = 0 gives exponential potential.
+    xSigma = 3*(5.50/6)*A;       % x standard deviation
+    ySigma = 3*(5.50/6)*A;       % y standard deviation
+    gaussPeakVal = 3*1.61*A;   % peak value of Gaussian
+    wellDepth = 10e-3*eV;
     
     notifySteps = floor(numSteps/numGfxToSave);   % TODO: Change to notifytime. # steps after which to notify user of progress
     psiSaveSteps = floor(numSteps/numPsiToSave);
     
-    if realTimePlotting
+    if realTimePlotting&&(numGfxToSave ~=0)
         gfxSteps = floor(numSteps/numGfxToSave);      % TODO: Change to gfxtime # steps after which, update graphics
     else
-        gfxSteps = 0;
+        if(propagationMethod == 6)
+            gfxSteps = numSteps;
+        else
+            gfxSteps = 0;
+        end
     end
     
-    % Propagation method: 1 = RK4Step. 2 = Split Operator O(dt^2). 3 = Split Operator O(dt^3), K split. 4 = Sp. Op. O(dt^3), V split. 5 = Sp.Op. O(dt^3), V
-    % split, time dependent.
-    propagationMethod = 5;
-    
-    numAdsorbates = 30;
     
     % Use integers for loop equality test. CARE: round will give you closest # to tFinish/dt and might be floor or ceiling value
     numIterations = round(tFinish/dt0);
@@ -94,21 +108,11 @@ function WavepacketPropagation_beta4_2
     if(~custompaths)
         SetupBrownianMotionGaussians(displayAdsorbateAnimation, realTimePlotting);%%%NaN bug caused by something in here %%% 
     else
-       SetupSpecifiedPaths(displayAdsorbateAnimation, realTimePlotting)
+       SetupSpecifiedPaths(displayAdsorbateAnimation, realTimePlotting);
     end
    
     %SetupZeroPotential();
     %SetupWedgePotential();
-    decayType = 3; % 1 = exponential repulsive. 2 = Morse attractive. 3 = Morse-like (needs alpha parameter input too!). 4=custom
-    
-    zOffset = -5*A; % Shift entire V away from boundary to stop Q.Tunneling through V %%% or to make custom potential go all the way to the surface
-    
-    potfile="potential.txt"; %for 4, text file containing floats for real and imaginary part of potential, seperated by lz. potential should be high to prevent tunelling over cyclic boundary  
-    alpha = 2; % Only needed for Morse-like potential. alpha = 2 gives Morse potential. alpha = 0 gives exponential potential.
-    xSigma = 3*(5.50/6)*A;       % x standard deviation
-    ySigma = 3*(5.50/6)*A;       % y standard deviation
-    gaussPeakVal = 3*1.61*A;   % peak value of Gaussian
-    wellDepth = 10e-3*eV;
     
     if decayType==4
        f=fopen(potfile,'r');
@@ -170,7 +174,33 @@ function WavepacketPropagation_beta4_2
     standardTime = 0.0;
     cudaTime = 0.0;
     nCalls = 0;
-    
+    t=tStart
+    if(propagationMethod==6)
+        for i=1:numGfxToSave
+
+            mexcudawhile(exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, gfxSteps,t,alpha,numIterations,numAdsorbates);         
+            
+            it=i*gfxSteps;
+            t=it*dt+tStart;
+            psi = copy_from_CUDA_complex(psi_ptr, nx, ny, nz);
+            
+            if(realTimePlotting)
+                UpdateGraphics(t, it)  
+                if savingSimulationRunning
+                    SaveSimulationRunning(t);
+                end
+            end
+            totProb = sum(sum(sum(psi.*conj(psi))));
+        
+            % Check unitarity (Note that the mex while loop only checks for unitarity when it makes a graphic, and not every iteration like the others)
+            if abs(totProb - 1) > eps
+                 fprintf(1, 'Step %d incomplete - unitarity error caused by previous step: %d. Time (%.3f ps, %.3f s): (unitarity %.7f)\n', it, it - 1, (it - 1)*dt/ps, toc, totProb);
+                 error("unitary error") %now terminates on this rather than restarting
+            end
+        end
+        it = it + 1; %to retain consistency for final graphic
+    else
+        
     while(it <= numIterations)  
         % Total probability
         totProb = sum(sum(sum(psi.*conj(psi))));
@@ -217,15 +247,17 @@ function WavepacketPropagation_beta4_2
                     standardTime = standardTime + toc;
 
                     tic;
-                    mex_split_operator_step_3rd_vsplit_time_dependent(t, exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, it, numAdsorbates, numIterations);
+                    mex_split_operator_step_3rd_vsplit_time_dependent(t, exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, it, numAdsorbates, numIterations); %currently always has alpha=2
                     mex_psi = copy_from_CUDA_complex(psi_ptr, nx, ny, nz);
                     cudaTime = cudaTime + toc;
                     nCalls = nCalls + 1;
+                %{
                 case 6 %Cuda only (which doesn't seem to exist..?)
                     tic;
-                    mex_split_operator_step_3rd_vsplit_time_dependent(t, exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, it, numAdsorbates, numIterations);
+                    mex_split_operator_step_3rd_vsplit_time_dependent(t, exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, it);
                     cudaTime = cudaTime + toc;
                     nCalls = nCalls + 1;
+                    %}
                 case 7 %noncuda original iteration method
                     tic;
                     psi = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t, expK);
@@ -238,13 +270,15 @@ function WavepacketPropagation_beta4_2
             it = it + 1;
         end
     end %While
+    end
+    %}
     % Tell user run is complete
     % Note, finalIteration = it - 1 as it starts counting at 1. t starts at 0 though, and t represents the time just after the last iteration, so tFinal = t
     fprintf('Run Complete.\nNumber of iterations = %d\nFinal simulation time = %.16e\n', it - 1, t);
     fprintf("MATLAB time %.3f, CUDA time %.3f, speedup x%.3f\n", standardTime, cudaTime, standardTime / cudaTime);
     
     % Force graphics update so psi_final is displayed
-    if gfxSteps > 0
+    if gfxSteps > 0 
         UpdateGraphics(t, it - 1)
     end
     
@@ -254,5 +288,15 @@ function WavepacketPropagation_beta4_2
     end
     
     % Free previously allocated memory in MEX files
+    %{
+    exp_v_ptr
+    z_offset_ptr
+    gauss_position_ptr
+    x0_ptr
+    y0_ptr
+    exp_k_ptr
+    psi_ptr
+    %}
+    
     free_array(0, size(CUDA_pointers, 2), [], CUDA_pointers);
 end

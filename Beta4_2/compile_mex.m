@@ -14,5 +14,7 @@ mexcuda MEX_helpers/cmp_complex_matlab_CUDA.cu MEX_helpers/complex.cu MEX_helper
 mexcuda PropagationAlgorithms/compute_expk.cu MEX_helpers/complex.cu MEX_helpers/cuda_helper.cu -lcuda
 mexcuda PropagationAlgorithms/mex_split_operator_step_3rd_vsplit_time_dependent.cu MEX_helpers/complex.cu MEX_helpers/cuda_helper.cu Setup/cuda_setup_dynamic_potential.cu -lcuda -lcufft
 
+mexcuda mexcudawhile.cu MEX_helpers/complex.cu MEX_helpers/cuda_helper.cu Setup/cuda_setup_dynamic_potential.cu -lcuda -lcufft
+
 end
 
