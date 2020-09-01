@@ -20,7 +20,7 @@
 \usepackage{subcaption}
 \usepackage{tikz}
 \usepackage{bm}
-
+\usepackage{hyperref}
 
 \let\oldvec=\vec
 \renewcommand{\vec}[1]{\oldvec{\mathbf{#1}}}
@@ -29,7 +29,7 @@
 \def\spvec#1{\left(\vcenter{\halign{\hfil$##$\hfil\cr \spvecA#1;;}}\right)}
 \def\spvecA#1;{\if;#1;\else #1\cr \expandafter \spvecA \fi}
 
-\usepackage[pagestyles,extramarks]{titlesec}
+
 \usepackage{fancyhdr}
 \pagestyle{fancy}
 
@@ -81,12 +81,28 @@
 
 \maketitle
 
+\includegraphics[width = 0.9\textwidth]{Cover.png}
+
+
 \newpage 
     
+\bigskip
+
 \tableofcontents
 
 \newpage
 
-\section{Introduction}
+\section{Wavepacket Propagation Introduction}
+\subsection{About}
+
+The Wavepacket propagation project is...
+
+
+\subsection{Necessary Prerequisites}
+
+To begin with, a computer with a CUDA compatible GPU (\href{https://developer.nvidia.com/cuda-gpus#compute}{List of compatible GPUs}) is required.
+
+
+\section{Usage}
 
 \end{document}

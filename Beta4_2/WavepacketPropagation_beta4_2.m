@@ -53,23 +53,24 @@ function WavepacketPropagation_beta4_2
     Browniefile="brownianpaths.txt";
     
     numPsiToSave = 1;
-    numGfxToSave = 3;
-    numSteps = round(tFinish/dt0);
-    
-    custompaths= false;
-    pathfile="brownianpaths.txt";
+    numGfxToSave = 10;
     
     % Propagation method: 1 = RK4Step. 2 = Split Operator O(dt^2). 3 = Split Operator O(dt^3), K split. 4 = Sp. Op. O(dt^3), V split. 5 = Sp.Op. O(dt^3), V
     % split, time dependent in mex and in matlab. 6= mex while loop with Sp.Op. O(dt^3), V split, time dependent. 7= just matlab Sp.Op. O(dt^3), V split, time dependent
-    propagationMethod = 6;
-    
+    propagationMethod = 7;
     numAdsorbates = 30;
+    
+    custompaths= false;
+    pathfile="brownianpaths.txt";
+    potfile="potential.txt"; %for 4, text file containing floats for real and imaginary part of potential, seperated by lz. potential should be high to prevent tunelling over cyclic boundary  
+    
+    numSteps = round(tFinish/dt0);
+
     
     decayType = 3; % 1 = exponential repulsive. 2 = Morse attractive. 3 = Morse-like (needs alpha parameter input too!). 4=custom
     
     zOffset = -5*A; % Shift entire V away from boundary to stop Q.Tunneling through V %%% or to make custom potential go all the way to the surface
     
-    potfile="potential.txt"; %for 4, text file containing floats for real and imaginary part of potential, seperated by lz. potential should be high to prevent tunelling over cyclic boundary  
     alpha = 2; % Only needed for Morse-like potential. alpha = 2 gives Morse potential. alpha = 0 gives exponential potential.
     xSigma = 3*(5.50/6)*A;       % x standard deviation
     ySigma = 3*(5.50/6)*A;       % y standard deviation
@@ -79,7 +80,7 @@ function WavepacketPropagation_beta4_2
     notifySteps = floor(numSteps/numGfxToSave);   % TODO: Change to notifytime. # steps after which to notify user of progress
     psiSaveSteps = floor(numSteps/numPsiToSave);
     
-    if realTimePlotting&&(numGfxToSave ~=0)
+    if realTimePlotting&&(numGfxToSave ~= 0)
         gfxSteps = floor(numSteps/numGfxToSave);      % TODO: Change to gfxtime # steps after which, update graphics
     else
         if(propagationMethod == 6)
@@ -174,7 +175,7 @@ function WavepacketPropagation_beta4_2
     standardTime = 0.0;
     cudaTime = 0.0;
     nCalls = 0;
-    t=tStart
+    t = tStart;
     if(propagationMethod==6)
         for i=1:numGfxToSave
 
