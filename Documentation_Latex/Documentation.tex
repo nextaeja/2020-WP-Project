@@ -1,0 +1,92 @@
+\documentclass[11pt,letterpaper]{article}
+\usepackage{fullpage}
+\usepackage[top=2cm, bottom=4.5cm, left=2.5cm, headsep=24pt, right=2.5cm]{geometry}
+\usepackage{amsmath,amsthm,amsfonts,amssymb,amscd}
+\usepackage{lastpage}
+\usepackage{enumerate}
+\usepackage{fancyhdr}
+\usepackage{mathrsfs}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage[utf8]{inputenc}
+\usepackage{physics}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage{siunitx}
+\usepackage{bm}
+\usepackage{float}
+\usepackage{subcaption}
+\usepackage{tikz}
+\usepackage{bm}
+
+
+\let\oldvec=\vec
+\renewcommand{\vec}[1]{\oldvec{\mathbf{#1}}}
+\def\doubleunderline#1{\underline{\underline{#1}}}
+
+\def\spvec#1{\left(\vcenter{\halign{\hfil$##$\hfil\cr \spvecA#1;;}}\right)}
+\def\spvecA#1;{\if;#1;\else #1\cr \expandafter \spvecA \fi}
+
+\usepackage[pagestyles,extramarks]{titlesec}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+
+\newenvironment{qns}[1]
+    {\begin{center}
+    \begin{tabular}{|p{0.9\textwidth}|}
+    \hline
+    \begin{center}
+        \textbf{#1}\\[1ex]
+    \end{center}
+
+    }
+    { 
+    \\\\\hline
+    \end{tabular} 
+    \end{center}
+    }
+
+\newtheorem{sol}{Solution}[subsection]
+  
+\newtheorem{thm}{Theorem}
+
+\renewcommand*{\l}{\left(}
+\renewcommand*{\r}{\right)}
+\newcommand{\partialt}{\frac{\partial}{\partial t}}
+\newcommand{\expectation}[1]{\left\langle #1 \right\rangle}
+\newcommand{\brakett}[3]{\left\langle#1\left|#2\right|#3\right\rangle}
+\newcommand{\partialf}[3]{\frac{\partial^{#3} #1}{\partial #2^{#3}}}
+\newcommand{\lbar}{\left|}
+\newcommand{\rbar}{\right|}
+\renewcommand*{\b}[1]{\mathbf{#1}}
+\def\matrix#1{\underline{\underline{#1}}}
+
+
+
+\fancyhf{}% Clear header/footer
+\fancyhead[C]{Beta 5.0}
+\fancyfoot[C]{\thepage}% \fancyfoot[R]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}% Default \headrulewidth is 0.4pt
+\renewcommand{\footrulewidth}{0.4pt}% Default \footrulewidth is 0p
+\fancyhead[L]{\leftmark}
+\fancyhead[R]{\rightmark}
+
+\title{Wavepacket Propagation Program (w/ Dr Nadav Avidor)}
+\author{Lorenzo Basso, Jack Lee, Matthew Zhang, Feiyang Chen}
+\date{April 2020}
+
+\begin{document}
+
+\maketitle
+
+\newpage 
+    
+\tableofcontents
+
+\newpage
+
+\section{Introduction}
+
+\end{document}
