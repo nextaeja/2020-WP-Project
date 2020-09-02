@@ -1,3 +1,4 @@
+%Compiled with TexLive + Visual Studio
 \documentclass[11pt,letterpaper]{article}
 \usepackage{fullpage}
 \usepackage[top=2cm, bottom=4.5cm, left=2.5cm, headsep=24pt, right=2.5cm]{geometry}
@@ -17,10 +18,6 @@
 \usepackage{siunitx}
 \usepackage{bm}
 \usepackage{float}
-\usepackage{subcaption}
-\usepackage{tikz}
-\usepackage{bm}
-\usepackage{hyperref}
 
 \let\oldvec=\vec
 \renewcommand{\vec}[1]{\oldvec{\mathbf{#1}}}
@@ -29,9 +26,6 @@
 \def\spvec#1{\left(\vcenter{\halign{\hfil$##$\hfil\cr \spvecA#1;;}}\right)}
 \def\spvecA#1;{\if;#1;\else #1\cr \expandafter \spvecA \fi}
 
-
-\usepackage{fancyhdr}
-\pagestyle{fancy}
 
 \newenvironment{qns}[1]
     {\begin{center}
@@ -65,13 +59,8 @@
 
 
 
-\fancyhf{}% Clear header/footer
-\fancyhead[C]{Beta 5.0}
-\fancyfoot[C]{\thepage}% \fancyfoot[R]{\thepage}
-\renewcommand{\headrulewidth}{0.4pt}% Default \headrulewidth is 0.4pt
-\renewcommand{\footrulewidth}{0.4pt}% Default \footrulewidth is 0p
-\fancyhead[L]{\leftmark}
-\fancyhead[R]{\rightmark}
+
+
 
 \title{Wavepacket Propagation Program (w/ Dr Nadav Avidor)}
 \author{Lorenzo Basso, Jack Lee, Matthew Zhang, Feiyang Chen}
@@ -81,14 +70,15 @@
 
 \maketitle
 
-\includegraphics[width = 0.9\textwidth]{Cover.png}
-
-
-\newpage 
-    
-\bigskip
-
 \tableofcontents
+
+
+\pagestyle{fancy}
+\renewcommand{\subsectionmark}[1]{\markright{#1}{}}
+\fancyhead[C]{Version 5.0}
+\fancyfoot[C]{\thepage}% \fancyfoot[R]{\thepage}
+\fancyhead[L]{\leftmark}
+\fancyhead[R]{\rightmark}
 
 \newpage
 
@@ -98,10 +88,31 @@
 The Wavepacket propagation project is an extension of a Part III project by Ocean Haghighi-Daly. It is a 3D working version of a Working attempt at a Split-Operator method of wavepacket propagation. 
 
 
-\subsection{Necessary Prerequisites}
+\subsection{Prerequisites}
 
-To begin with, a computer with a CUDA compatible GPU (\href{https://developer.nvidia.com/cuda-gpus#compute}{List of compatible GPUs}) is required.
+To begin with, a computer with a CUDA compatible GPU (\href{https://developer.nvidia.com/cuda-gpus#compute}{List of compatible GPUs}) is required.The MEX/CUDA dependent files have already been compiled for an x64 Linux and x64 Windows system with CUDA 10.1 compatibility. However, it is potentially necessary to install a CUDA/C++ compiler depending on the CUDA capability your GPU has.\\
 
+\textbf{Installation Guides:}
+
+\begin{itemize}
+    \item \href{https://developer.nvidia.com/cuda-downloads?target_os=Windows&target_arch=x86_64}{Latest CUDA Package Download} (If you believe you don't need to follow the installation guides as the Windows install is reasonably simple)
+    \item \href{https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/index.html}{Windows Installation Guide}
+    \item \href{https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html}{Linux Installation Guide}
+    \item \href{https://docs.nvidia.com/cuda/cuda-installation-guide-mac-os-x/index.html}{Mac OS X Installation Guide}
+\end{itemize}
+
+These guides also include the relevant instructions to install CUDA/C++ compilers for your relevant OS. If for some reason the documentation is too tedious, we will (maybe) try to provide a simplified version that produces functionality in the \hyperref[sec:compilerinstall]{Appendix}\\
+
+
+
+
+\bigskip
+
+\textbf{The required Matlab Toolboxes for the program to function are as follows:}
+\begin{itemize}
+    \item Parallel Computing Toolbox
+    \item Bioinformatics Toolbox
+\end{itemize}
 
 \section{Usage}
 \subsection{Custom Paths and Potentials}
@@ -112,6 +123,17 @@ Functionality to include custom adsorbate paths and potentials was added by Jack
     \item Custom paths: this allows you to specify the paths that adsorbates take, rather than having them be generated randomly. To enable this, set custompaths to true and specify in pathfile a text file (in beta4\_2) formatted as follows: the first entry on each line should be a time, then for each adsorbate there should be its x position and then its y position at that time, separated by spaces. There can be any number of times, as long as the first is $\leq$ tStart and the last is $\geq$ tFinish, and they’ll be interpolated to get the paths. 
     \item Saving paths: this allows you to save the randomly generated paths adsorbates take this time in the simulation. It doesn’t do anything if custom paths is on. To enable it, set savingBrownianPaths to true and name a .txt file in Browniefile, which will be overwritten or created in beta4\_2. This saves the paths in the same format as Custom paths reads them, with one line for each timestep of the simulation. These files can later be read by custom paths to reproduce this simulation (and could be used to vary the potential, detail etc.), although there is a small error introduced here so that the final psi from the custom paths simulation is slightly different to that of the original. Two custom paths simulations from the same source will be the same, however.
 \end{enumerate}
+
+
+
+\section{Appendix}
+
+\subsection{CUDA + Compiler Install}
+
+\label{sec:compilerinstall}
+\subsubsection{Windows}
+Installation for Windows is reasonably straightfoward.
+
 
 
 \end{document}
