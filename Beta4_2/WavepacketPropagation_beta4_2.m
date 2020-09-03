@@ -57,17 +57,18 @@ function WavepacketPropagation_beta4_2
     
     % Propagation method: 1 = RK4Step. 2 = Split Operator O(dt^2). 3 = Split Operator O(dt^3), K split. 4 = Sp. Op. O(dt^3), V split. 5 = Sp.Op. O(dt^3), V
     % split, time dependent in mex and in matlab. 6= mex while loop with Sp.Op. O(dt^3), V split, time dependent. 7= just matlab Sp.Op. O(dt^3), V split, time dependent
-    propagationMethod = 7;
+    propagationMethod = 6;
     numAdsorbates = 30;
     
-    custompaths = true;
+    custompaths = false;
     pathfile = "brownianpaths.txt";
-    potfile = "potential.txt"; %for 4, text file containing floats for real and imaginary part of potential, seperated by lz. potential should be high to prevent tunelling over cyclic boundary  
-    
+        
     numSteps = round(tFinish/dt0);
 
     
     decayType = 3; % 1 = exponential repulsive. 2 = Morse attractive. 3 = Morse-like (needs alpha parameter input too!). 4=custom
+    
+    potfile = "potential.txt"; %for 4, text file containing floats for real and imaginary part of potential, seperated by lz. potential should be high to prevent tunelling over cyclic boundary  
     
     zOffset = -5*A; % Shift entire V away from boundary to stop Q.Tunneling through V %%% or to make custom potential go all the way to the surface
     
@@ -76,6 +77,8 @@ function WavepacketPropagation_beta4_2
     ySigma = 3*(5.50/6)*A;       % y standard deviation
     gaussPeakVal = 3*1.61*A;   % peak value of Gaussian
     wellDepth = 10e-3*eV;
+    
+    %End of inputs
     
     notifySteps = floor(numSteps/numGfxToSave);   % TODO: Change to notifytime. # steps after which to notify user of progress
     psiSaveSteps = floor(numSteps/numPsiToSave);
@@ -179,7 +182,7 @@ function WavepacketPropagation_beta4_2
     if(propagationMethod==6)
         for i=1:numGfxToSave
             UpdateGraphics(t, it)
-            mexcudawhile(exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, gfxSteps,t,alpha,numIterations,numAdsorbates);         
+            mexcudawhile(exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, gfxSteps,t,alpha,it,numAdsorbates);         
             
             it=i*gfxSteps;
             t=it*dt+tStart;
