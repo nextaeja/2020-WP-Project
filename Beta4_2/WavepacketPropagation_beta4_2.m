@@ -60,9 +60,9 @@ function WavepacketPropagation_beta4_2
     propagationMethod = 7;
     numAdsorbates = 30;
     
-    custompaths= false;
-    pathfile="brownianpaths.txt";
-    potfile="potential.txt"; %for 4, text file containing floats for real and imaginary part of potential, seperated by lz. potential should be high to prevent tunelling over cyclic boundary  
+    custompaths = true;
+    pathfile = "brownianpaths.txt";
+    potfile = "potential.txt"; %for 4, text file containing floats for real and imaginary part of potential, seperated by lz. potential should be high to prevent tunelling over cyclic boundary  
     
     numSteps = round(tFinish/dt0);
 
@@ -178,7 +178,7 @@ function WavepacketPropagation_beta4_2
     t = tStart;
     if(propagationMethod==6)
         for i=1:numGfxToSave
-
+            UpdateGraphics(t, it)
             mexcudawhile(exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, gfxSteps,t,alpha,numIterations,numAdsorbates);         
             
             it=i*gfxSteps;
@@ -252,17 +252,18 @@ function WavepacketPropagation_beta4_2
                     mex_psi = copy_from_CUDA_complex(psi_ptr, nx, ny, nz);
                     cudaTime = cudaTime + toc;
                     nCalls = nCalls + 1;
-                %{
-                case 6 %Cuda only (which doesn't seem to exist..?)
-                    tic;
-                    mex_split_operator_step_3rd_vsplit_time_dependent(t, exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, it);
-                    cudaTime = cudaTime + toc;
-                    nCalls = nCalls + 1;
-                    %}
+            
                 case 7 %noncuda original iteration method
                     tic;
                     psi = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t, expK);
                     standardTime = standardTime + toc;
+                    
+                case 8 %Cuda only (which doesn't seem to exist..?)
+                    tic;
+                    mex_split_operator_step_3rd_vsplit_time_dependent(t, exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, it);
+                    cudaTime = cudaTime + toc;
+                    nCalls = nCalls + 1;
+                    
             end
             % Iteration it complete. t is now t + dt
             t = t + dt;
