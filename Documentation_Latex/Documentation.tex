@@ -18,6 +18,8 @@
 \usepackage{siunitx}
 \usepackage{bm}
 \usepackage{float}
+\usepackage{pdfpages}
+
 
 \let\oldvec=\vec
 \renewcommand{\vec}[1]{\oldvec{\mathbf{#1}}}
@@ -134,6 +136,11 @@ Functionality to include custom adsorbate paths and potentials was added by Jack
 \subsubsection{Windows}
 Installation for Windows is reasonably straightfoward.
 
+\subsection{Ocean Report}
+
+The report is displayed on the next pages
+\includepdf[pages=-]{Ocean_report.pdf}
 
 
+\subsection{Test}
 \end{document}

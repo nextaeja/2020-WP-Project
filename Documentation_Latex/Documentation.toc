@@ -6,3 +6,5 @@
 \contentsline {section}{\numberline {3}Appendix}{3}{section.3}%
 \contentsline {subsection}{\numberline {3.1}CUDA + Compiler Install}{3}{subsection.3.1}%
 \contentsline {subsubsection}{\numberline {3.1.1}Windows}{3}{subsubsection.3.1.1}%
+\contentsline {subsection}{\numberline {3.2}Ocean Report}{3}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Test}{17}{subsection.3.3}%
