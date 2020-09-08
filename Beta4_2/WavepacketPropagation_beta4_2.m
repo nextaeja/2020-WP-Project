@@ -13,7 +13,7 @@
 % 1Å ~ Atomic diameter
 
 function WavepacketPropagation_beta4_2
-    tbegin = tic;  
+
 %===START=TIMING========================================================================================%
     tic
     
@@ -33,9 +33,9 @@ function WavepacketPropagation_beta4_2
     lz = 90*A;
     
     % Setup grid - use powers of 2 for quickest FFT
-    nx = 64;
-    ny = 64;
-    nz = 64;
+    nx = 128;
+    ny = 128;
+    nz = 256;
     
     % Acceptable error in wavepacket norm
     eps = 1e-6;
@@ -44,32 +44,32 @@ function WavepacketPropagation_beta4_2
     dt0 = 0.01*ps;      % Initial timestep. Units = s
     tStart = 0*ps;      % Units = s
     tFinish = 12*ps;    % Units = s
-    
-    savingSimulationEnd = true; %Seems broken
+        
     savingSimulationRunning = true;
-    realTimePlotting = true;
+    savingSimulationEnd = true;
+    realTimePlotting = true;%also determines if graphics are saved
     displayAdsorbateAnimation = false;
-    
-    numPsiToSave = 20;
-    numGfxToSave = 20;
-    
-    % Propagation method: 1 = RK4Step. 2 = Split Operator O(dt^2). 3 = Split Operator O(dt^3), K split. 4 = Sp. Op. O(dt^3), V split. 5 = Sp.Op. O(dt^3), V
-    % split, time dependent in mex and in matlab. 6= mex while loop with Sp.Op. O(dt^3), V split, time dependent. 7 = just matlab Sp.Op. O(dt^3), V split, time dependent
-    propagationMethod = 6;
-    numAdsorbates = 30;
-   
-    
     savingBrownianPaths=false;
     Browniefile="brownianpaths.txt";
+    
+    numPsiToSave = 1;%not used for prop method 6
+    numGfxToSave = 10; %for prop 6, psi saved at the same time, psi can be saved while disabling graphics by disabling realTimePlotting 
+    
+    % Propagation method: 1 = RK4Step. 2 = Split Operator O(dt^2). 3 = Split Operator O(dt^3), K split. 4 = Sp. Op. O(dt^3), V split. 5 = Sp.Op. O(dt^3), V
+    % split, time dependent in mex and in matlab. 6= mex while loop with Sp.Op. O(dt^3), V split, time dependent. 7= just matlab Sp.Op. O(dt^3), V split, time dependent
+    propagationMethod = 6;
+    numAdsorbates = 30;
+    
+    custompaths = true;
+    pathfile = "brownianpaths.txt";
+        
+    numSteps = round(tFinish/dt0);
 
-    custompaths = false;
-    pathfile = "brownianpaths.txt";  
+    
+    decayType = 3; % 1 = exponential repulsive. 2 = Morse attractive. 3 = Morse-like (needs alpha parameter input too!). 4=custom
+    
     potfile = "potential.txt"; %for 4, text file containing floats for real and imaginary part of potential, seperated by lz. potential should be high to prevent tunelling over cyclic boundary  
     
-    
-    numSteps = round(tFinish/dt0);
-    decayType = 3; % 1 = exponential repulsive. 2 = Morse attractive. 3 = Morse-like (needs alpha parameter input too!). 4=custom
-  
     zOffset = -5*A; % Shift entire V away from boundary to stop Q.Tunneling through V %%% or to make custom potential go all the way to the surface
     
     alpha = 2; % Only needed for Morse-like potential. alpha = 2 gives Morse potential. alpha = 0 gives exponential potential.
@@ -78,8 +78,7 @@ function WavepacketPropagation_beta4_2
     gaussPeakVal = 3*1.61*A;   % peak value of Gaussian
     wellDepth = 10e-3*eV;
     
-    %End of inputs==========================================================%
-    
+    %End of inputs
     
     notifySteps = floor(numSteps/numGfxToSave);   % TODO: Change to notifytime. # steps after which to notify user of progress
     psiSaveSteps = floor(numSteps/numPsiToSave);
@@ -88,8 +87,11 @@ function WavepacketPropagation_beta4_2
         gfxSteps = floor(numSteps/numGfxToSave);      % TODO: Change to gfxtime # steps after which, update graphics
     else
         if(propagationMethod == 6)
-            gfxSteps = floor(numSteps/numGfxToSave);
-            %gfxSteps = numSteps; This was original why is this here?
+            if(numGfxToSave ~= 0)
+                gfxSteps = floor(numSteps/numGfxToSave);
+            else
+                gfxSteps = numSteps;
+            end
         else
             gfxSteps = 0;
         end
@@ -182,20 +184,23 @@ function WavepacketPropagation_beta4_2
     nCalls = 0;
     t = tStart;
     if(propagationMethod==6)
-        UpdateGraphics(t,0)
         for i=1:numGfxToSave
-            mexcudawhile(exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, gfxSteps,t,alpha,it,numAdsorbates);         
-            
-            it=i*gfxSteps;
-            t=it*dt+tStart;
-            psi = copy_from_CUDA_complex(psi_ptr, nx, ny, nz);
-            
             if(realTimePlotting)
                 UpdateGraphics(t, it)  
                 if savingSimulationRunning
                     SaveSimulationRunning(t);
                 end
             end
+            mexcudawhile(exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, gfxSteps,t,alpha,it,numAdsorbates);         
+            
+            it=i*gfxSteps;
+            t=it*dt+tStart;
+            psi = copy_from_CUDA_complex(psi_ptr, nx, ny, nz);
+            if savingSimulationRunning
+                saveName = strcat('psi_t', num2str(t/ps), '.mat');
+                save(saveName, 'psi');
+            end
+            
             totProb = sum(sum(sum(psi.*conj(psi))));
         
             % Check unitarity (Note that the mex while loop only checks for unitarity when it makes a graphic, and not every iteration like the others)
@@ -223,13 +228,11 @@ function WavepacketPropagation_beta4_2
             end
             
             % Produce graphics if asked and if correct # of steps has passed
-            if(realTimePlotting)
-                if gfxSteps > 0 && mod(it - 1, gfxSteps) == 0
-                    UpdateGraphics(t, it - 1)
+            if gfxSteps > 0 && mod(it - 1, gfxSteps) == 0
+                UpdateGraphics(t, it - 1)
                 
-                    if savingSimulationRunning
-                        SaveSimulationRunning(t);
-                    end
+                if savingSimulationRunning
+                    SaveSimulationRunning(t);
                 end
             end
             % Save psi if necessary
@@ -259,17 +262,18 @@ function WavepacketPropagation_beta4_2
                     mex_psi = copy_from_CUDA_complex(psi_ptr, nx, ny, nz);
                     cudaTime = cudaTime + toc;
                     nCalls = nCalls + 1;
+            
                 case 7 %noncuda original iteration method
                     tic;
                     psi = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t, expK);
                     standardTime = standardTime + toc;
-                    %{
+                    
                 case 8 %Cuda only (which doesn't seem to exist..?)
                     tic;
                     mex_split_operator_step_3rd_vsplit_time_dependent(t, exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, it);
                     cudaTime = cudaTime + toc;
                     nCalls = nCalls + 1;
-                    %}
+                    
             end
             % Iteration it complete. t is now t + dt
             t = t + dt;
@@ -279,18 +283,14 @@ function WavepacketPropagation_beta4_2
         end
     end %While
     end
-    
-    tEnd = toc(tbegin);   
     %}
     % Tell user run is complete
     % Note, finalIteration = it - 1 as it starts counting at 1. t starts at 0 though, and t represents the time just after the last iteration, so tFinal = t
     fprintf('Run Complete.\nNumber of iterations = %d\nFinal simulation time = %.16e\n', it - 1, t);
-    fprintf('Total Run Time %.3f\n', tEnd)   
-    if propagationMethod == 5
-        fprintf("MATLAB time %.3f, CUDA time %.3f, speedup x%.3f\n", standardTime, cudaTime, standardTime / cudaTime);
-    end
+    fprintf("MATLAB time %.3f, CUDA time %.3f, speedup x%.3f\n", standardTime, cudaTime, standardTime / cudaTime);
+    
     % Force graphics update so psi_final is displayed
-    if gfxSteps > 0 
+    if (gfxSteps > 0 &&realTimePlotting)
         UpdateGraphics(t, it - 1)
     end
     
