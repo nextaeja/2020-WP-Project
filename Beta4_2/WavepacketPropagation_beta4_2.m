@@ -45,12 +45,12 @@ function WavepacketPropagation_beta4_2
     tStart = 0*ps;      % Units = s
     tFinish = 12*ps;    % Units = s
     
-    realTimePlotting = true;
     savingSimulationEnd = true; %Seems broken
-    savingSimulationRunning = false;
+    savingSimulationRunning = true;
+    realTimePlotting = true;
     displayAdsorbateAnimation = false;
     
-    numPsiToSave = 1;
+    numPsiToSave = 20;
     numGfxToSave = 20;
     
     % Propagation method: 1 = RK4Step. 2 = Split Operator O(dt^2). 3 = Split Operator O(dt^3), K split. 4 = Sp. Op. O(dt^3), V split. 5 = Sp.Op. O(dt^3), V

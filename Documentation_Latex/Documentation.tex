@@ -160,9 +160,18 @@ All variables are in SI units. SetupSIUnits.m initializes global variables used 
 
 lx, ly, lz define the length of the box in which you want the wavefunction to propagate, while nx, ny, nz denote the grid sizing (how finely you want to splice up essentially). Grid sizing also determines how much memory is used (approximately $nx \times ny \times nz$ bits).\\
 
-\textbf{savingSimulationRunning} will create a folder under "SavedSimulation" and save the figures of the wavefunction propagation while the program is running. The number of pictures saved is dependent on \textbf{numGfxToSave}. \textbf{numGfxToSave} breaks up the total iteration time into equally spaced blocks of time. It will also save the initialization data, and additionally, the final wavefunction as a matlab data file.\\
+\textbf{SavingSimulationRunning} will create a folder under "SavedSimulation" and save the figures of the wavefunction propagation while the program is running. The number of pictures saved is dependent on \textbf{numGfxToSave}. \textbf{numGfxToSave} breaks up the total iteration time into equally spaced blocks of time. It will also save the initialization data, and additionally, the final wavefunction as a matlab data file.\\
 
-\textbf{SavingSimulationEnd} only saves the final wavefunction, as well as the initialization data. This can be used if the propagation of the wavefunction is not as important.
+\textbf{SavingSimulationEnd} only saves the final wavefunction, as well as the initialization data. This can be used if the propagation of the wavefunction is not as important.\\
+
+\textbf{RealTimePlotting} displays each figure at the time intervals determined by \textbf{numGfxToSave}. This setting is not a requirement to have \textbf{SavingSimulationRunning} = true. It is greatly advised to either change \textbf{numGfxToSave} to 1 or set \textbf{RealTimePlotting} to false as it will greatly improve the simulation speed.\\
+
+\textbf{DisplayAdsorbateAnimation} shows the motion of the adsorbates fed in. This setting is useful if you're feeding a custom potential+path to ensure that it is phrased correctly.\\
+
+
+
+
+
 
 \subsection{Custom Paths and Potentials}
 Functionality to include custom adsorbate paths and potentials was added by Jack Lee.
