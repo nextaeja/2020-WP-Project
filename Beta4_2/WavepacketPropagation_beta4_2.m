@@ -33,9 +33,9 @@ function WavepacketPropagation_beta4_2
     lz = 90*A;
     
     % Setup grid - use powers of 2 for quickest FFT
-    nx = 32;
-    ny = 32;
-    nz = 32;
+    nx = 128;
+    ny = 128;
+    nz = 128;
     
     % Acceptable error in wavepacket norm
     eps = 1e-6;
@@ -47,7 +47,7 @@ function WavepacketPropagation_beta4_2
         
     savingSimulationRunning = false;
     savingSimulationEnd = true;
-    realTimePlotting = false; %also determines if graphics are saved
+    realTimePlotting = true; %also determines if graphics are saved
     displayAdsorbateAnimation = false;
     savingBrownianPaths=false;
     Browniefile="brownianpaths.txt";
@@ -57,7 +57,7 @@ function WavepacketPropagation_beta4_2
     
     % Propagation method: 1 = RK4Step. 2 = Split Operator O(dt^2). 3 = Split Operator O(dt^3), K split. 4 = Sp. Op. O(dt^3), V split. 5 = Sp.Op. O(dt^3), V
     % split, time dependent in mex and in matlab. 6= mex while loop with Sp.Op. O(dt^3), V split, time dependent. 7= just matlab Sp.Op. O(dt^3), V split, time dependent
-    propagationMethod = 6;
+    propagationMethod = 8;
     numAdsorbates = 30;
     
     custompaths = true;
@@ -172,7 +172,7 @@ function WavepacketPropagation_beta4_2
     dt = dt0;
     t = tStart;
    
-    it = 1;
+    it = 0;
         
     % Compute the value of expK
     % This is constant unless the value of dt is changed
@@ -185,6 +185,7 @@ function WavepacketPropagation_beta4_2
     cudaTime = 0.0;
     nCalls = 0;
     t = tStart;
+    
     if(propagationMethod==6)
         for i=1:numGfxToSave
             if(realTimePlotting)
@@ -193,10 +194,11 @@ function WavepacketPropagation_beta4_2
                     SaveSimulationRunning(t);
                 end
             end
-            mexcudawhile(exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, gfxSteps,t,alpha,it,numAdsorbates);         
-            
-            it=i*gfxSteps;
+            mexcudawhile(exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, gfxSteps,t,alpha,it,numAdsorbates);
+            it = (i)*(gfxSteps);
             t=it*dt+tStart;
+                     
+            
             psi = copy_from_CUDA_complex(psi_ptr, nx, ny, nz);
             if savingSimulationRunning
                 saveName = strcat('psi_t', num2str(t/ps), '.mat');
@@ -213,8 +215,8 @@ function WavepacketPropagation_beta4_2
         end
         it = it + 1; %to retain consistency for final graphic
     else
-        
-    while(it <= numIterations)  
+    it = 0;
+    while(it < numIterations)  
         % Total probability
         totProb = sum(sum(sum(psi.*conj(psi))));
         
@@ -230,8 +232,8 @@ function WavepacketPropagation_beta4_2
             end
             
             % Produce graphics if asked and if correct # of steps has passed
-            if gfxSteps > 0 && mod(it - 1, gfxSteps) == 0
-                UpdateGraphics(t, it - 1)
+            if gfxSteps > 0 && mod(it, gfxSteps) == 0
+                UpdateGraphics(t, it)
                 
                 if savingSimulationRunning
                     SaveSimulationRunning(t);
@@ -254,28 +256,24 @@ function WavepacketPropagation_beta4_2
                     psi = SplitOperatorStep_exp_3rdOrder_KSplit();
                 case 4
                     psi = SplitOperatorStep_exp_3rdOrder_VSplit();
-                case 5
+                case 5 %noncuda original iteration method
+                    psi = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t, expK);
+                case 6
                     tic;
                     psi = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t, expK);
                     standardTime = standardTime + toc;
 
                     tic;
-                    mex_split_operator_step_3rd_vsplit_time_dependent(t, exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, it, numAdsorbates, numIterations); %currently always has alpha=2
+                    mex_split_operator_step_3rd_vsplit_time_dependent(t, exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, it, numAdsorbates); %currently always has alpha=2
                     mex_psi = copy_from_CUDA_complex(psi_ptr, nx, ny, nz);
                     cudaTime = cudaTime + toc;
                     nCalls = nCalls + 1;
-            
-                case 7 %noncuda original iteration method
-                    tic;
-                    psi = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t, expK);
-                    standardTime = standardTime + toc;
-                   %{
                 case 8 %Cuda only (which doesn't seem to exist..?)
                     tic;
-                    mex_split_operator_step_3rd_vsplit_time_dependent(t, exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, it);
+                    mex_split_operator_step_3rd_vsplit_time_dependent(t, exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, it, numAdsorbates); %currently always has alpha=2
+                    psi = copy_from_CUDA_complex(psi_ptr, nx, ny, nz);
                     cudaTime = cudaTime + toc;
                     nCalls = nCalls + 1;
-                    %}
             end
             % Iteration it complete. t is now t + dt
             t = t + dt;
@@ -286,6 +284,8 @@ function WavepacketPropagation_beta4_2
     end %While
     end
     
+    t = t;
+    it = it;
     
     tEnd = toc(tbegin);  
     %}
@@ -299,12 +299,12 @@ function WavepacketPropagation_beta4_2
     end
     % Force graphics update so psi_final is displayed
     if (gfxSteps > 0 &&realTimePlotting)
-        UpdateGraphics(t, it - 1)
+        UpdateGraphics(t, it)
     end
     
     % If saving simulation, print end data to file
     if(savingSimulationRunning || savingSimulationEnd)
-       SaveSimulationEndData(t, it - 1);
+       SaveSimulationEndData(t, it);
     end
     
     % Free previously allocated memory in MEX files
