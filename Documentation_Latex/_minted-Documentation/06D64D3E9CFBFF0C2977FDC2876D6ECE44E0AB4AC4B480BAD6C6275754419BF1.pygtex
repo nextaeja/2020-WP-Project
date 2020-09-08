@@ -1,0 +1,7 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n}{    MEX }\PYG{l+s}{configured to use \PYGZsq{}Microsoft Visual C++ 2019\PYGZsq{} for C++ language compilation.}
+
+    \PYG{l+s}{\PYGZsq{}To choose a different C++ compiler, select one from the following\PYGZsq{}}\PYG{p}{:}
+\PYG{n}{    MinGW64 }\PYG{l+s}{mex \PYGZhy{}setup:\PYGZsq{}C:\PYGZbs{}PATHTO\PYGZbs{}mexopts\PYGZbs{}mingw64\PYGZus{}g++.xml\PYGZsq{} C++}
+\PYG{n}{    MSVS\PYGZus{}2019 }\PYG{l+s}{mex \PYGZhy{}setup:\PYGZsq{}C:\PYGZbs{}PATHTO\PYGZbs{}mexopts\PYGZbs{}msvcpp2019.xml\PYGZsq{} C++}
+\end{Verbatim}

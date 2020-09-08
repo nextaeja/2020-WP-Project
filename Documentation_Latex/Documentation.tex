@@ -1,5 +1,6 @@
 %Compiled with TexLive + Visual Studio
 \documentclass[11pt,letterpaper]{article}
+
 \usepackage{fullpage}
 \usepackage[top=2cm, bottom=4.5cm, left=2.5cm, headsep=24pt, right=2.5cm]{geometry}
 \usepackage{amsmath,amsthm,amsfonts,amssymb,amscd}
@@ -20,6 +21,7 @@
 \usepackage{float}
 \usepackage{pdfpages}
 
+\usepackage{minted}
 
 \let\oldvec=\vec
 \renewcommand{\vec}[1]{\oldvec{\mathbf{#1}}}
@@ -105,8 +107,33 @@ To begin with, a computer with a CUDA compatible GPU (\href{https://developer.nv
 
 These guides also include the relevant instructions to install CUDA/C++ compilers for your relevant OS. If for some reason the documentation is too tedious, we will (maybe) try to provide a simplified version that produces functionality in the \hyperref[sec:compilerinstall]{Appendix}\\
 
+\textbf{Setup MEXCUDA Compiler}\\
 
+\textbf{Windows:}\\
 
+For Windows, Visual Studio must be installed with the Desktop Development Package for C++ installed. If the user has MinGW compiler installer for previous MEX compile operators, then it may be necessary to change compilers. This is because MinGW is incompatible with MEXCUDA operations. This can be done by running
+
+\begin{minted}{matlab}
+    mex -setup C++
+\end{minted}
+
+Which will output something like the following:
+
+\begin{minted}{matlab}
+    MEX configured to use 'Microsoft Visual C++ 2019' for C++ language compilation.
+
+    'To choose a different C++ compiler, select one from the following':
+    MinGW64 mex -setup:'C:\PATHTO\mexopts\mingw64_g++.xml' C++
+    MSVS_2019 mex -setup:'C:\PATHTO\mexopts\msvcpp2019.xml' C++ 
+\end{minted}
+
+\begin{center}
+    \includegraphics[width = 0.6\textwidth]{Windows_Compiler.png}
+\end{center}
+
+\textbf{Linux:}\\
+
+For a Linux system, the CUDA installation should come with the corresponding NVCC compiler for MEXCUDA. GCC (The standard C++ compiler) is a prerequisite to installing CUDA, and is also necessary for code compilation.
 
 \bigskip
 
@@ -118,7 +145,24 @@ These guides also include the relevant instructions to install CUDA/C++ compiler
 
 \section{Usage}
 
-\subsection{parameters}
+\subsection{parameters/initialization} 
+
+All variables are in SI units. SetupSIUnits.m initializes global variables used in picoscale wavefunction propagation:
+
+\begin{align*}
+    \textbf{hBar} &= 1.054571800 \times 10^{-34} Js\\
+    \textbf{c} &= 299792458 m/s\\
+    \textbf{eV} &= 1.6021766208 \times 10^{-19} J\\
+    \textbf{amu} &=  1.660539040 \times 10^{-27} kg\\
+    \textbf{A} &= 1.00 \times 10^{-10} m\\
+    \textbf{ps} &= 1.00 \times 10^{-12} s
+\end{align*}
+
+lx, ly, lz define the length of the box in which you want the wavefunction to propagate, while nx, ny, nz denote the grid sizing (how finely you want to splice up essentially). Grid sizing also determines how much memory is used (approximately $nx \times ny \times nz$ bits).\\
+
+\textbf{savingSimulationRunning} will create a folder under "SavedSimulation" and save the figures of the wavefunction propagation while the program is running. The number of pictures saved is dependent on \textbf{numGfxToSave}. \textbf{numGfxToSave} breaks up the total iteration time into equally spaced blocks of time. It will also save the initialization data, and additionally, the final wavefunction as a matlab data file.\\
+
+\textbf{SavingSimulationEnd} only saves the final wavefunction, as well as the initialization data. This can be used if the propagation of the wavefunction is not as important.
 
 \subsection{Custom Paths and Potentials}
 Functionality to include custom adsorbate paths and potentials was added by Jack Lee.
@@ -137,7 +181,34 @@ Functionality to include custom adsorbate paths and potentials was added by Jack
 
 \label{sec:compilerinstall}
 \subsubsection{Windows}
-Installation for Windows is reasonably straightfoward.
+Installation for Windows is reasonably straightfoward. It requires first to download the \href{https://developer.nvidia.com/cuda-downloads?target_os=Windows&target_arch=x86_64}{Latest CUDA Package Download} and run the relevant executable file.\\
+
+\begin{center}
+    \includegraphics[width = 0.6\textwidth]{Windows_Compiler.png}
+\end{center}
+
+Next, Visual Studio must be installed with the Desktop Development Package for C++ installed. If the user has MinGW compiler installer for previous MEX compile operators, then it may be necessary to change compilers. This is because MinGW is incompatible with MEXCUDA operations. This can be done by running
+
+\begin{minted}{matlab}
+    mex -setup C++
+\end{minted}
+
+Which will output something like the following:
+
+\begin{minted}{matlab}
+    MEX configured to use 'Microsoft Visual C++ 2019' for C++ language compilation.
+
+    'To choose a different C++ compiler, select one from the following':
+    MinGW64 mex -setup:'C:\PATHTO\mexopts\mingw64_g++.xml' C++
+    MSVS_2019 mex -setup:'C:\PATHTO\mexopts\msvcpp2019.xml' C++ 
+\end{minted}
+
+
+\subsubsection{Linux}
+CUDA installation for Linux is significantly more annoying than Windows. As the installs for different distros can vary fairly significantly, the best suggestion I have is for the user to follow the instructions in the installation guides.\\
+
+The corresponding CUDA install should come with the NVCC compiler necessary to compile the MEXCUDA files.
+
 
 \subsection{Ocean Report}
 
