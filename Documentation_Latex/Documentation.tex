@@ -30,6 +30,7 @@
 \def\spvec#1{\left(\vcenter{\halign{\hfil$##$\hfil\cr \spvecA#1;;}}\right)}
 \def\spvecA#1;{\if;#1;\else #1\cr \expandafter \spvecA \fi}
 
+\renewcommand{\\}{\bigskip}
 
 \newenvironment{qns}[1]
     {\begin{center}
