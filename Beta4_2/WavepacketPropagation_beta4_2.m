@@ -13,7 +13,7 @@
 % 1Å ~ Atomic diameter
 
 function WavepacketPropagation_beta4_2
-
+    tbegin = tic;  
 %===START=TIMING========================================================================================%
     tic
     
@@ -33,9 +33,9 @@ function WavepacketPropagation_beta4_2
     lz = 90*A;
     
     % Setup grid - use powers of 2 for quickest FFT
-    nx = 128;
-    ny = 128;
-    nz = 256;
+    nx = 32;
+    ny = 32;
+    nz = 32;
     
     % Acceptable error in wavepacket norm
     eps = 1e-6;
@@ -45,9 +45,9 @@ function WavepacketPropagation_beta4_2
     tStart = 0*ps;      % Units = s
     tFinish = 12*ps;    % Units = s
         
-    savingSimulationRunning = true;
+    savingSimulationRunning = false;
     savingSimulationEnd = true;
-    realTimePlotting = true;%also determines if graphics are saved
+    realTimePlotting = false; %also determines if graphics are saved
     displayAdsorbateAnimation = false;
     savingBrownianPaths=false;
     Browniefile="brownianpaths.txt";
@@ -78,7 +78,9 @@ function WavepacketPropagation_beta4_2
     gaussPeakVal = 3*1.61*A;   % peak value of Gaussian
     wellDepth = 10e-3*eV;
     
-    %End of inputs
+    
+     %End of inputs==========================================================%
+     
     
     notifySteps = floor(numSteps/numGfxToSave);   % TODO: Change to notifytime. # steps after which to notify user of progress
     psiSaveSteps = floor(numSteps/numPsiToSave);
@@ -267,13 +269,13 @@ function WavepacketPropagation_beta4_2
                     tic;
                     psi = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t, expK);
                     standardTime = standardTime + toc;
-                    
+                   %{
                 case 8 %Cuda only (which doesn't seem to exist..?)
                     tic;
                     mex_split_operator_step_3rd_vsplit_time_dependent(t, exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, it);
                     cudaTime = cudaTime + toc;
                     nCalls = nCalls + 1;
-                    
+                    %}
             end
             % Iteration it complete. t is now t + dt
             t = t + dt;
@@ -283,12 +285,18 @@ function WavepacketPropagation_beta4_2
         end
     end %While
     end
+    
+    
+    tEnd = toc(tbegin);  
     %}
     % Tell user run is complete
     % Note, finalIteration = it - 1 as it starts counting at 1. t starts at 0 though, and t represents the time just after the last iteration, so tFinal = t
     fprintf('Run Complete.\nNumber of iterations = %d\nFinal simulation time = %.16e\n', it - 1, t);
-    fprintf("MATLAB time %.3f, CUDA time %.3f, speedup x%.3f\n", standardTime, cudaTime, standardTime / cudaTime);
-    
+    if propagationMethod == 5	
+        fprintf("MATLAB time %.3f, CUDA time %.3f, speedup x%.3f\n", standardTime, cudaTime, standardTime / cudaTime);
+    else
+        fprintf('Total Run Time %.3f\n', tEnd);
+    end
     % Force graphics update so psi_final is displayed
     if (gfxSteps > 0 &&realTimePlotting)
         UpdateGraphics(t, it - 1)
