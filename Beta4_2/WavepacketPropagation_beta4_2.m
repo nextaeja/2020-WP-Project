@@ -254,28 +254,24 @@ function WavepacketPropagation_beta4_2
                     psi = SplitOperatorStep_exp_3rdOrder_KSplit();
                 case 4
                     psi = SplitOperatorStep_exp_3rdOrder_VSplit();
-                case 5
+                case 5 %noncuda original iteration method
+                    psi = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t, expK);
+                case 6
                     tic;
                     psi = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t, expK);
                     standardTime = standardTime + toc;
 
                     tic;
-                    mex_split_operator_step_3rd_vsplit_time_dependent(t, exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, it, numAdsorbates, numIterations); %currently always has alpha=2
+                    mex_split_operator_step_3rd_vsplit_time_dependent(t, exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, it, numAdsorbates); %currently always has alpha=2
                     mex_psi = copy_from_CUDA_complex(psi_ptr, nx, ny, nz);
                     cudaTime = cudaTime + toc;
                     nCalls = nCalls + 1;
-            
-                case 7 %noncuda original iteration method
-                    tic;
-                    psi = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t, expK);
-                    standardTime = standardTime + toc;
-                   %{
                 case 8 %Cuda only (which doesn't seem to exist..?)
                     tic;
-                    mex_split_operator_step_3rd_vsplit_time_dependent(t, exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, it);
+                    mex_split_operator_step_3rd_vsplit_time_dependent(t, exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, it, numAdsorbates); %currently always has alpha=2
+                    psi = copy_from_CUDA_complex(psi_ptr, nx, ny, nz);
                     cudaTime = cudaTime + toc;
                     nCalls = nCalls + 1;
-                    %}
             end
             % Iteration it complete. t is now t + dt
             t = t + dt;
