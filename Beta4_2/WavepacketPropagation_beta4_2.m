@@ -53,7 +53,7 @@ function WavepacketPropagation_beta4_2
     Browniefile="brownianpaths.txt";
     
     numPsiToSave = 1;%not used for prop method 6
-    numGfxToSave = 1; %for prop 6, psi saved at the same time, psi can be saved while disabling graphics by disabling realTimePlotting 
+    numGfxToSave = 10; %for prop 6, psi saved at the same time, psi can be saved while disabling graphics by disabling realTimePlotting 
     
     % Propagation method: 1 = RK4Step. 2 = Split Operator O(dt^2). 3 = Split Operator O(dt^3), K split. 4 = Sp. Op. O(dt^3), V split. 5 = Sp.Op. O(dt^3), V
     % split, time dependent in mex and in matlab. 6= mex while loop with Sp.Op. O(dt^3), V split, time dependent. 7= just matlab Sp.Op. O(dt^3), V split, time dependent
@@ -284,7 +284,6 @@ function WavepacketPropagation_beta4_2
         end
     end %While
     end
-
     
     tEnd = toc(tbegin);  
     %}
