@@ -33,9 +33,9 @@ function WavepacketPropagation_beta4_2
     lz = 90*A;
     
     % Setup grid - use powers of 2 for quickest FFT
-    nx = 32;
-    ny = 32;
-    nz = 32;
+    nx = 64;
+    ny = 64;
+    nz = 64;
     
     % Acceptable error in wavepacket norm
     eps = 1e-6;
@@ -47,17 +47,17 @@ function WavepacketPropagation_beta4_2
         
     savingSimulationRunning = false;
     savingSimulationEnd = true;
-    realTimePlotting = false; %also determines if graphics are saved
+    realTimePlotting = true; %also determines if graphics are saved
     displayAdsorbateAnimation = false;
     savingBrownianPaths=false;
     Browniefile="brownianpaths.txt";
     
     numPsiToSave = 1;%not used for prop method 6
-    numGfxToSave = 10; %for prop 6, psi saved at the same time, psi can be saved while disabling graphics by disabling realTimePlotting 
+    numGfxToSave = 1; %for prop 6, psi saved at the same time, psi can be saved while disabling graphics by disabling realTimePlotting 
     
     % Propagation method: 1 = RK4Step. 2 = Split Operator O(dt^2). 3 = Split Operator O(dt^3), K split. 4 = Sp. Op. O(dt^3), V split. 5 = Sp.Op. O(dt^3), V
     % split, time dependent in mex and in matlab. 6= mex while loop with Sp.Op. O(dt^3), V split, time dependent. 7= just matlab Sp.Op. O(dt^3), V split, time dependent
-    propagationMethod = 8;
+    propagationMethod = 5;
     numAdsorbates = 30;
     
     custompaths = true;
