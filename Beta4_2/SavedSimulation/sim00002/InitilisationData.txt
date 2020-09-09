@@ -51,4 +51,4 @@ Simulation Finished
 tFinal = 1.2000000000000001e-11
 dt used = 1.0000000000000000e-14
 Number of steps = 1200
-Compute time = 6.086905
+Compute time = 6.062970
