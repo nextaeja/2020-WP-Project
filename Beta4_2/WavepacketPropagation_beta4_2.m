@@ -57,7 +57,7 @@ function WavepacketPropagation_beta4_2
     
     % Propagation method: 1 = RK4Step. 2 = Split Operator O(dt^2). 3 = Split Operator O(dt^3), K split. 4 = Sp. Op. O(dt^3), V split. 5 = Sp.Op. O(dt^3), V
     % split, time dependent in mex and in matlab. 6= mex while loop with Sp.Op. O(dt^3), V split, time dependent. 7= just matlab Sp.Op. O(dt^3), V split, time dependent
-    propagationMethod = 6;
+    propagationMethod = 8;
     numAdsorbates = 30;
     
     custompaths = true;
