@@ -53,11 +53,11 @@ function WavepacketPropagation_beta4_2
     Browniefile="brownianpaths.txt";
     
     numPsiToSave = 1;%not used for prop method 6
-    numGfxToSave = 10; %for prop 6, psi saved at the same time, psi can be saved while disabling graphics by disabling realTimePlotting 
+    numGfxToSave = 1; %for prop 6, psi saved at the same time, psi can be saved while disabling graphics by disabling realTimePlotting 
     
     % Propagation method: 1 = RK4Step. 2 = Split Operator O(dt^2). 3 = Split Operator O(dt^3), K split. 4 = Sp. Op. O(dt^3), V split. 5 = Sp.Op. O(dt^3), V
     % split, time dependent in mex and in matlab. 6= mex while loop with Sp.Op. O(dt^3), V split, time dependent. 7= just matlab Sp.Op. O(dt^3), V split, time dependent
-    propagationMethod = 8;
+    propagationMethod = 5;
     numAdsorbates = 30;
     
     custompaths = true;
@@ -194,10 +194,10 @@ function WavepacketPropagation_beta4_2
                     SaveSimulationRunning(t);
                 end
             end
-            mexcudawhile(exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, gfxSteps,t,alpha,it,numAdsorbates);
+            mexcudawhile(exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, gfxSteps,t,alpha,it,numAdsorbates);         
             it = (i)*(gfxSteps);
             t=it*dt+tStart;
-                     
+            
             
             psi = copy_from_CUDA_complex(psi_ptr, nx, ny, nz);
             if savingSimulationRunning
@@ -205,6 +205,7 @@ function WavepacketPropagation_beta4_2
                 save(saveName, 'psi');
             end
             
+            % Should move this line to the cuda while ?=================%
             totProb = sum(sum(sum(psi.*conj(psi))));
         
             % Check unitarity (Note that the mex while loop only checks for unitarity when it makes a graphic, and not every iteration like the others)
@@ -213,10 +214,10 @@ function WavepacketPropagation_beta4_2
                  error("unitary error") %now terminates on this rather than restarting
             end
         end
-        it = it + 1; %to retain consistency for final graphic
+        %it = it + 1; %to retain consistency for final graphic
     else
-    it = 0;
-    while(it < numIterations)  
+
+    while(it <= numIterations)  
         % Total probability
         totProb = sum(sum(sum(psi.*conj(psi))));
         
@@ -226,7 +227,7 @@ function WavepacketPropagation_beta4_2
             error("unitary error") %now terminates on this rather than restarting
         else
             % Notify user if necessary. it - 1 as step is NOT complete yet. it - 1 is complete.
-            if notifySteps > 0 && mod(it - 1, notifySteps)== 0
+            if notifySteps > 0 && mod(it, notifySteps)== 0
                 fprintf(1, 'Step %d complete (%.3f ps, %.3f s): propagate wpkt (unitarity %.7f)\n', it - 1, t/ps, toc, totProb);
                 fprintf("MATLAB time %.3f, CUDA time %.3f, speedup x%.3f\n", standardTime, cudaTime, standardTime / cudaTime);
             end
@@ -283,15 +284,13 @@ function WavepacketPropagation_beta4_2
         end
     end %While
     end
-    
-    t = t;
-    it = it;
+
     
     tEnd = toc(tbegin);  
     %}
     % Tell user run is complete
     % Note, finalIteration = it - 1 as it starts counting at 1. t starts at 0 though, and t represents the time just after the last iteration, so tFinal = t
-    fprintf('Run Complete.\nNumber of iterations = %d\nFinal simulation time = %.16e\n', it - 1, t);
+    fprintf('Run Complete.\nNumber of iterations = %d\nFinal simulation time = %.16e\n', it , t);
     if propagationMethod == 5	
         fprintf("MATLAB time %.3f, CUDA time %.3f, speedup x%.3f\n", standardTime, cudaTime, standardTime / cudaTime);
     else

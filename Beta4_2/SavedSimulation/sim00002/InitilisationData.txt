@@ -11,7 +11,7 @@ Simulation Data:
 Starting dt = dt0 = 0.01ps
 tStart = 0ps
 tFinish = 12ps
-Propagation Method: 8
+Propagation Method: 6
 
 Units:
 ------
@@ -48,7 +48,7 @@ saveLocation = C:\Users\Matthew\Documents\GitHub\2020-WP-Project\Beta4_2\SavedSi
 Simulation Finished
 ===================
 
-tFinal = 1.2000000000000156e-11
+tFinal = 1.2000000000000001e-11
 dt used = 1.0000000000000000e-14
 Number of steps = 1200
-Compute time = 0.331567
+Compute time = 18.898685

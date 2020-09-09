@@ -138,7 +138,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]) {
 	double dx = mxGetScalar(prhs[15]);
 	double dy = mxGetScalar(prhs[16]);
 	double dz = mxGetScalar(prhs[17]);
-	int it = 0;
+	int it = 1;
 	int gfxSteps= mxGetScalar(prhs[18]);
 	double t = mxGetScalar(prhs[19]);
 	double alpha = mxGetScalar(prhs[20]);
@@ -155,7 +155,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]) {
 
 
 
-	while (it < gfxSteps) {
+	while (it <= gfxSteps) {
 		mex_split_operator_step_3rd_vsplit_time_dependent(t, dev_expv, dev_z_offset, dev_gauss_pos, dev_x0, dev_y0, dev_expk, dev_psi, nx, ny, nz, decay_type, A, eV, h_bar, dt, dx, dy, dz,alpha,iteration,num_adsorbates);
 		it++;
 		iteration++;
