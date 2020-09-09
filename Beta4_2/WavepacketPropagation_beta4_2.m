@@ -33,9 +33,9 @@ function WavepacketPropagation_beta4_2
     lz = 90*A;
     
     % Setup grid - use powers of 2 for quickest FFT
-    nx = 128;
-    ny = 128;
-    nz = 128;
+    nx = 64;
+    ny = 64;
+    nz = 64;
     
     % Acceptable error in wavepacket norm
     eps = 1e-6;
@@ -57,7 +57,7 @@ function WavepacketPropagation_beta4_2
     
     % Propagation method: 1 = RK4Step. 2 = Split Operator O(dt^2). 3 = Split Operator O(dt^3), K split. 4 = Sp. Op. O(dt^3), V split. 5 = Sp.Op. O(dt^3), V
     % split, time dependent in mex and in matlab. 6= mex while loop with Sp.Op. O(dt^3), V split, time dependent. 7= just matlab Sp.Op. O(dt^3), V split, time dependent
-    propagationMethod = 5;
+    propagationMethod = 8;
     numAdsorbates = 30;
     
     custompaths = true;
@@ -217,7 +217,7 @@ function WavepacketPropagation_beta4_2
         %it = it + 1; %to retain consistency for final graphic
     else
 
-    while(it <= numIterations)  
+    while(it < numIterations)  
         % Total probability
         totProb = sum(sum(sum(psi.*conj(psi))));
         
@@ -228,7 +228,7 @@ function WavepacketPropagation_beta4_2
         else
             % Notify user if necessary. it - 1 as step is NOT complete yet. it - 1 is complete.
             if notifySteps > 0 && mod(it, notifySteps)== 0
-                fprintf(1, 'Step %d complete (%.3f ps, %.3f s): propagate wpkt (unitarity %.7f)\n', it - 1, t/ps, toc, totProb);
+                fprintf(1, 'Step %d complete (%.3f ps, %.3f s): propagate wpkt (unitarity %.7f)\n', it, t/ps, toc, totProb);
                 fprintf("MATLAB time %.3f, CUDA time %.3f, speedup x%.3f\n", standardTime, cudaTime, standardTime / cudaTime);
             end
             
