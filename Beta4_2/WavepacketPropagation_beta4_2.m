@@ -172,7 +172,7 @@ function WavepacketPropagation_beta4_2
     dt = dt0;
     t = tStart;
    
-    it = 1;
+    it = 0;
         
     % Compute the value of expK
     % This is constant unless the value of dt is changed
@@ -185,6 +185,7 @@ function WavepacketPropagation_beta4_2
     cudaTime = 0.0;
     nCalls = 0;
     t = tStart;
+    
     if(propagationMethod==6)
         for i=1:numGfxToSave
             if(realTimePlotting)
@@ -194,15 +195,17 @@ function WavepacketPropagation_beta4_2
                 end
             end
             mexcudawhile(exp_v_ptr, z_offset_ptr, gauss_position_ptr, x0_ptr, y0_ptr, exp_k_ptr, psi_ptr, nx, ny, nz, decayType, A, eV, hBar, dt, dx, dy, dz, gfxSteps,t,alpha,it,numAdsorbates);         
-            
-            it=i*gfxSteps;
+            it = (i)*(gfxSteps);
             t=it*dt+tStart;
+            
+            
             psi = copy_from_CUDA_complex(psi_ptr, nx, ny, nz);
             if savingSimulationRunning
                 saveName = strcat('psi_t', num2str(t/ps), '.mat');
                 save(saveName, 'psi');
             end
             
+            % Should move this line to the cuda while ?=================%
             totProb = sum(sum(sum(psi.*conj(psi))));
         
             % Check unitarity (Note that the mex while loop only checks for unitarity when it makes a graphic, and not every iteration like the others)
@@ -211,10 +214,10 @@ function WavepacketPropagation_beta4_2
                  error("unitary error") %now terminates on this rather than restarting
             end
         end
-        it = it + 1; %to retain consistency for final graphic
+        %it = it + 1; %to retain consistency for final graphic
     else
-        
-    while(it <= numIterations)  
+
+    while(it < numIterations)  
         % Total probability
         totProb = sum(sum(sum(psi.*conj(psi))));
         
@@ -224,14 +227,14 @@ function WavepacketPropagation_beta4_2
             error("unitary error") %now terminates on this rather than restarting
         else
             % Notify user if necessary. it - 1 as step is NOT complete yet. it - 1 is complete.
-            if notifySteps > 0 && mod(it - 1, notifySteps)== 0
-                fprintf(1, 'Step %d complete (%.3f ps, %.3f s): propagate wpkt (unitarity %.7f)\n', it - 1, t/ps, toc, totProb);
+            if notifySteps > 0 && mod(it, notifySteps)== 0
+                fprintf(1, 'Step %d complete (%.3f ps, %.3f s): propagate wpkt (unitarity %.7f)\n', it, t/ps, toc, totProb);
                 fprintf("MATLAB time %.3f, CUDA time %.3f, speedup x%.3f\n", standardTime, cudaTime, standardTime / cudaTime);
             end
             
             % Produce graphics if asked and if correct # of steps has passed
-            if gfxSteps > 0 && mod(it - 1, gfxSteps) == 0
-                UpdateGraphics(t, it - 1)
+            if gfxSteps > 0 && mod(it, gfxSteps) == 0
+                UpdateGraphics(t, it)
                 
                 if savingSimulationRunning
                     SaveSimulationRunning(t);
@@ -281,13 +284,13 @@ function WavepacketPropagation_beta4_2
         end
     end %While
     end
-    
+
     
     tEnd = toc(tbegin);  
     %}
     % Tell user run is complete
     % Note, finalIteration = it - 1 as it starts counting at 1. t starts at 0 though, and t represents the time just after the last iteration, so tFinal = t
-    fprintf('Run Complete.\nNumber of iterations = %d\nFinal simulation time = %.16e\n', it - 1, t);
+    fprintf('Run Complete.\nNumber of iterations = %d\nFinal simulation time = %.16e\n', it , t);
     if propagationMethod == 5	
         fprintf("MATLAB time %.3f, CUDA time %.3f, speedup x%.3f\n", standardTime, cudaTime, standardTime / cudaTime);
     else
@@ -295,12 +298,12 @@ function WavepacketPropagation_beta4_2
     end
     % Force graphics update so psi_final is displayed
     if (gfxSteps > 0 &&realTimePlotting)
-        UpdateGraphics(t, it - 1)
+        UpdateGraphics(t, it)
     end
     
     % If saving simulation, print end data to file
     if(savingSimulationRunning || savingSimulationEnd)
-       SaveSimulationEndData(t, it - 1);
+       SaveSimulationEndData(t, it);
     end
     
     % Free previously allocated memory in MEX files

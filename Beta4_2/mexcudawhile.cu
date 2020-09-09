@@ -155,7 +155,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]) {
 
 
 
-	while (it <= gfxSteps) {
+	while (it < gfxSteps) {
 		mex_split_operator_step_3rd_vsplit_time_dependent(t, dev_expv, dev_z_offset, dev_gauss_pos, dev_x0, dev_y0, dev_expk, dev_psi, nx, ny, nz, decay_type, A, eV, h_bar, dt, dx, dy, dz,alpha,iteration,num_adsorbates);
 		it++;
 		iteration++;
