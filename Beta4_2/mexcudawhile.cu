@@ -138,7 +138,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]) {
 	double dx = mxGetScalar(prhs[15]);
 	double dy = mxGetScalar(prhs[16]);
 	double dz = mxGetScalar(prhs[17]);
-	int it = 0;
+	int it = 1;
 	int gfxSteps= mxGetScalar(prhs[18]);
 	double t = mxGetScalar(prhs[19]);
 	double alpha = mxGetScalar(prhs[20]);
