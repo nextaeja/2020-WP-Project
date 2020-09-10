@@ -53,11 +53,11 @@ function WavepacketPropagation_beta4_2
     Browniefile="brownianpaths.txt";
     
     numPsiToSave = 1;%not used for prop method 6
-    numGfxToSave = 1; %for prop 6, psi saved at the same time, psi can be saved while disabling graphics by disabling realTimePlotting 
+    numGfxToSave = 10; %for prop 6, psi saved at the same time, psi can be saved while disabling graphics by disabling realTimePlotting 
     
     % Propagation method: 1 = RK4Step. 2 = Split Operator O(dt^2). 3 = Split Operator O(dt^3), K split. 4 = Sp. Op. O(dt^3), V split. 5 = Sp.Op. O(dt^3), V
     % split, time dependent in mex and in matlab. 6= mex while loop with Sp.Op. O(dt^3), V split, time dependent. 7= just matlab Sp.Op. O(dt^3), V split, time dependent
-    propagationMethod = 8;
+    propagationMethod = 7;
     numAdsorbates = 30;
     
     custompaths = true;
@@ -259,7 +259,7 @@ function WavepacketPropagation_beta4_2
                     psi = SplitOperatorStep_exp_3rdOrder_VSplit();
                 case 5 %noncuda original iteration method
                     psi = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t, expK);
-                case 6
+                case 7
                     tic;
                     psi = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t, expK);
                     standardTime = standardTime + toc;
@@ -284,15 +284,28 @@ function WavepacketPropagation_beta4_2
         end
     end %While
     end
-
+    
+    if(propagationMethod == 7)
+        psiCudaErrors = (psi - mex_psi);
+        psiPlaceholder = psiCudaErrors./mex_psi;
+        psiErrorSize = size(psiPlaceholder);
+        
+        psiErrorTotal = sum(psiPlaceholder, 'all');
+        psiErrorTotal = abs(psiErrorTotal);
+        
+        psiErrorSize = prod(psiErrorSize);
+        
+        avgPsiError = psiErrorTotal/psiErrorSize;
+        disp(avgPsiError);
+    end
     
     tEnd = toc(tbegin);  
     %}
     % Tell user run is complete
     % Note, finalIteration = it - 1 as it starts counting at 1. t starts at 0 though, and t represents the time just after the last iteration, so tFinal = t
     fprintf('Run Complete.\nNumber of iterations = %d\nFinal simulation time = %.16e\n', it , t);
-    if propagationMethod == 5	
-        fprintf("MATLAB time %.3f, CUDA time %.3f, speedup x%.3f\n", standardTime, cudaTime, standardTime / cudaTime);
+    if propagationMethod == 7	
+        fprintf("MATLAB time %.3f, CUDA time %.3f, speedup x%.3f\n, %% error in CUDA vs Matlab x%.3f\n", standardTime, cudaTime, standardTime / cudaTime, avgPsiError);
     else
         fprintf('Total Run Time %.3f\n', tEnd);
     end

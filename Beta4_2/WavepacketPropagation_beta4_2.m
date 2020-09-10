@@ -46,7 +46,7 @@ function WavepacketPropagation_beta4_2
     tFinish = 12*ps;    % Units = s
         
     savingSimulationRunning = false;
-    savingSimulationEnd = true;
+    savingSimulationEnd = false;
     realTimePlotting = true; %also determines if graphics are saved
     displayAdsorbateAnimation = false;
     savingBrownianPaths=false;
@@ -259,7 +259,7 @@ function WavepacketPropagation_beta4_2
                     psi = SplitOperatorStep_exp_3rdOrder_VSplit();
                 case 5 %noncuda original iteration method
                     psi = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t, expK);
-                case 6
+                case 7
                     tic;
                     psi = SplitOperatorStep_exp_3rdOrder_VSplit_TimeDependent(t, expK);
                     standardTime = standardTime + toc;
@@ -285,13 +285,27 @@ function WavepacketPropagation_beta4_2
     end %While
     end
     
+    if(propagationMethod == 7)
+        psiCudaErrors = (psi - mex_psi);
+        psiPlaceholder = psiCudaErrors./mex_psi;
+        psiErrorSize = size(psiPlaceholder);
+        
+        psiErrorTotal = sum(psiPlaceholder, 'all');
+        psiErrorTotal = abs(psiErrorTotal);
+        
+        psiErrorSize = prod(psiErrorSize);
+        
+        avgPsiError = psiErrorTotal/psiErrorSize;
+        avgPsiError = 100 * avgPsiError;
+    end
+    
     tEnd = toc(tbegin);  
     %}
     % Tell user run is complete
     % Note, finalIteration = it - 1 as it starts counting at 1. t starts at 0 though, and t represents the time just after the last iteration, so tFinal = t
     fprintf('Run Complete.\nNumber of iterations = %d\nFinal simulation time = %.16e\n', it , t);
-    if propagationMethod == 5	
-        fprintf("MATLAB time %.3f, CUDA time %.3f, speedup x%.3f\n", standardTime, cudaTime, standardTime / cudaTime);
+    if propagationMethod == 7	
+        fprintf("MATLAB time %.3f, CUDA time %.3f, speedup x%.3f, %% error in CUDA vs Matlab %.5f\n", standardTime, cudaTime, standardTime / cudaTime, avgPsiError);
     else
         fprintf('Total Run Time %.3f\n', tEnd);
     end
