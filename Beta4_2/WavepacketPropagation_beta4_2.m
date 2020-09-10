@@ -52,6 +52,8 @@ function WavepacketPropagation_beta4_2
     savingBrownianPaths=false;
     Browniefile="brownianpaths.txt";
     
+    savelocation =""; %if "" it will save in beta 4_2
+    
     numPsiToSave = 1;%not used for prop method 6
     numGfxToSave = 10; %for prop 6, psi saved at the same time, psi can be saved while disabling graphics by disabling realTimePlotting 
     
@@ -153,7 +155,11 @@ function WavepacketPropagation_beta4_2
 %===SAVING=RESULTS=====================================================================================%
     % Variable dictating whether simulation saved in 'Simulations' folder
     % or not 
-    savingDirectory = strcat(pwd,'\SavedSimulation');
+    if(savelocation=="")
+        savingDirectory = strcat(pwd,'\SavedSimulation');
+    else
+        savingDirectory=savelocation;
+    end
     
     % Create unique simulation folder to store results
     if(savingSimulationRunning || savingSimulationEnd)
@@ -319,7 +325,6 @@ function WavepacketPropagation_beta4_2
        SaveSimulationEndData(t, it);
     end
     
-    % Free previously allocated memory in MEX files
     %{
     exp_v_ptr
     z_offset_ptr
@@ -330,5 +335,6 @@ function WavepacketPropagation_beta4_2
     psi_ptr
     %}
     
+    % Free previously allocated memory in MEX files
     free_array(0, size(CUDA_pointers, 2), [], CUDA_pointers);
 end
