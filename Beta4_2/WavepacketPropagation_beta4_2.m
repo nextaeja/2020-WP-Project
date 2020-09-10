@@ -35,7 +35,7 @@ function WavepacketPropagation_beta4_2
     % Setup grid - use powers of 2 for quickest FFT
     nx = 64;
     ny = 64;
-    nz = 64;
+    nz = 256;
     
     % Acceptable error in wavepacket norm
     eps = 1e-6;
@@ -46,18 +46,18 @@ function WavepacketPropagation_beta4_2
     tFinish = 12*ps;    % Units = s
         
     savingSimulationRunning = false;
-    savingSimulationEnd = false;
+    savingSimulationEnd = true;
     realTimePlotting = true; %also determines if graphics are saved
     displayAdsorbateAnimation = false;
     savingBrownianPaths=false;
     Browniefile="brownianpaths.txt";
     
     numPsiToSave = 1;%not used for prop method 6
-    numGfxToSave = 10; %for prop 6, psi saved at the same time, psi can be saved while disabling graphics by disabling realTimePlotting 
+    numGfxToSave = 20; %for prop 6, psi saved at the same time, psi can be saved while disabling graphics by disabling realTimePlotting 
     
     % Propagation method: 1 = RK4Step. 2 = Split Operator O(dt^2). 3 = Split Operator O(dt^3), K split. 4 = Sp. Op. O(dt^3), V split. 5 = Sp.Op. O(dt^3), V
     % split, time dependent in mex and in matlab. 6= mex while loop with Sp.Op. O(dt^3), V split, time dependent. 7= just matlab Sp.Op. O(dt^3), V split, time dependent
-    propagationMethod = 8;
+    propagationMethod = 6;
     numAdsorbates = 30;
     
     custompaths = true;
@@ -178,7 +178,7 @@ function WavepacketPropagation_beta4_2
     % This is constant unless the value of dt is changed
     expK = exp((-1i*dt/hBar)*(-hBar^2*-kSquared/(2*mass)));
     compute_expk(exp_k_ptr, k_squared_ptr, hBar, dt, mass, kSquared, nx*ny*nz);
-    cmp_complex_matlab_CUDA(expK, exp_k_ptr, 1e-7, nx, ny, nz);
+    cmp_complex_matlab_CUDA(expK, exp_k_ptr, eps, nx, ny, nz);
     
     % Loop iteratively until tFinish reached
     standardTime = 0.0;
