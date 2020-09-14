@@ -2,11 +2,12 @@
 \BOOKMARK [2][-]{subsection.1.1}{About}{section.1}% 2
 \BOOKMARK [2][-]{subsection.1.2}{Prerequisites}{section.1}% 3
 \BOOKMARK [1][-]{section.2}{Usage}{}% 4
-\BOOKMARK [2][-]{subsection.2.1}{parameters/initialization}{section.2}% 5
-\BOOKMARK [2][-]{subsection.2.2}{Custom Paths and Potentials}{section.2}% 6
-\BOOKMARK [1][-]{section.3}{Appendix}{}% 7
-\BOOKMARK [2][-]{subsection.3.1}{CUDA + Compiler Install}{section.3}% 8
-\BOOKMARK [3][-]{subsubsection.3.1.1}{Windows}{subsection.3.1}% 9
-\BOOKMARK [3][-]{subsubsection.3.1.2}{Linux}{subsection.3.1}% 10
-\BOOKMARK [2][-]{subsection.3.2}{Ocean Report}{section.3}% 11
-\BOOKMARK [2][-]{subsection.3.3}{Test}{section.3}% 12
+\BOOKMARK [2][-]{subsection.2.1}{Initialization/WavePacketPropagation\137Beta4\1372}{section.2}% 5
+\BOOKMARK [2][-]{subsection.2.2}{Setup Folder}{section.2}% 6
+\BOOKMARK [2][-]{subsection.2.3}{Custom Paths and Potentials}{section.2}% 7
+\BOOKMARK [1][-]{section.3}{Appendix}{}% 8
+\BOOKMARK [2][-]{subsection.3.1}{CUDA + Compiler Install}{section.3}% 9
+\BOOKMARK [3][-]{subsubsection.3.1.1}{Windows}{subsection.3.1}% 10
+\BOOKMARK [3][-]{subsubsection.3.1.2}{Linux}{subsection.3.1}% 11
+\BOOKMARK [2][-]{subsection.3.2}{Ocean Report}{section.3}% 12
+\BOOKMARK [2][-]{subsection.3.3}{Test}{section.3}% 13

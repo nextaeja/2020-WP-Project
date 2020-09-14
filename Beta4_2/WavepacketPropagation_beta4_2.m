@@ -33,44 +33,47 @@ function WavepacketPropagation_beta4_2
     lz = 90*A;
     
     % Setup grid - use powers of 2 for quickest FFT
-    nx = 64;
-    ny = 64;
-    nz = 256;
+    nx = 128;
+    ny = 128;
+    nz = 512;
     
     % Acceptable error in wavepacket norm
-    eps = 1e-6;
+    eps = 1e-4;
     
     % Time properties
     dt0 = 0.01*ps;      % Initial timestep. Units = s
     tStart = 0*ps;      % Units = s
     tFinish = 12*ps;    % Units = s
         
+    realTimePlotting = true; %also determines if graphics are saved for SavingSimulationRunning
     savingSimulationRunning = false;
-    savingSimulationEnd = true;
-    realTimePlotting = true; %also determines if graphics are saved
+    savingSimulationEnd = false;
     displayAdsorbateAnimation = false;
     savingBrownianPaths=false;
-    Browniefile="brownianpaths.txt";
+    Browniefile="PotentialFiles/brownianpaths.txt";
     
-    savelocation =""; %if "" it will save in beta 4_2
+    saveLocation =""; %if "" it will save in beta 4_2
     
     numPsiToSave = 1;%not used for prop method 6
     numGfxToSave = 20; %for prop 6, psi saved at the same time, psi can be saved while disabling graphics by disabling realTimePlotting 
     
     % Propagation method: 1 = RK4Step. 2 = Split Operator O(dt^2). 3 = Split Operator O(dt^3), K split. 4 = Sp. Op. O(dt^3), V split. 5 = Sp.Op. O(dt^3), V
-    % split, time dependent in mex and in matlab. 6= mex while loop with Sp.Op. O(dt^3), V split, time dependent. 7= just matlab Sp.Op. O(dt^3), V split, time dependent
+    % split, time dependent. 6 = MEXCUDA while loop with Sp.Op. O(dt^3), V split, time dependent.
+    % 7 = matlab and MEX Sp.Op. O(dt^3), V split, time dependent. 8 = MEX Sp. Op. O(dt^3) V split,
+    % time dependent. 
     propagationMethod = 6;
     numAdsorbates = 30;
     
     custompaths = true;
-    pathfile = "brownianpaths.txt";
+    pathfile = "PotentialFiles/brownianpaths.txt";
         
+    
     numSteps = round(tFinish/dt0);
 
     
     decayType = 3; % 1 = exponential repulsive. 2 = Morse attractive. 3 = Morse-like (needs alpha parameter input too!). 4=custom
     
-    potfile = "potential.txt"; %for 4, text file containing floats for real and imaginary part of potential, seperated by lz. potential should be high to prevent tunelling over cyclic boundary  
+    potfile = "PotentialFiles/potential.txt"; %for 4, text file containing floats for real and imaginary part of potential, seperated by lz. potential should be high to prevent tunelling over cyclic boundary  
     
     zOffset = -5*A; % Shift entire V away from boundary to stop Q.Tunneling through V %%% or to make custom potential go all the way to the surface
     
@@ -116,7 +119,6 @@ function WavepacketPropagation_beta4_2
     psi_ptr = CUDA_pointers(7);
     gauss_position_ptr = CUDA_pointers(8);
     
-    
     if(~custompaths)
         SetupBrownianMotionGaussians(displayAdsorbateAnimation, realTimePlotting);%%%NaN bug caused by something in here %%% 
     else
@@ -155,10 +157,10 @@ function WavepacketPropagation_beta4_2
 %===SAVING=RESULTS=====================================================================================%
     % Variable dictating whether simulation saved in 'Simulations' folder
     % or not 
-    if(savelocation=="")
+    if(saveLocation=="")
         savingDirectory = strcat(pwd,'\SavedSimulation');
     else
-        savingDirectory=savelocation;
+        savingDirectory=saveLocation;
     end
     
     % Create unique simulation folder to store results
@@ -177,8 +179,6 @@ function WavepacketPropagation_beta4_2
     psi = psi0;
     dt = dt0;
     t = tStart;
-   
-    it = 0;
         
     % Compute the value of expK
     % This is constant unless the value of dt is changed

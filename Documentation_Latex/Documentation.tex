@@ -146,7 +146,7 @@ For a Linux system, the CUDA installation should come with the corresponding NVC
 
 \section{Usage}
 
-\subsection{parameters/initialization} 
+\subsection{Initialization/WavePacketPropagation\_Beta4\_2} 
 
 All variables are in SI units. SetupSIUnits.m initializes global variables used in picoscale wavefunction propagation:
 
@@ -159,21 +159,50 @@ All variables are in SI units. SetupSIUnits.m initializes global variables used 
     \textbf{ps} &= 1.00 \times 10^{-12} s
 \end{align*}
 
-lx, ly, lz define the length of the box in which you want the wavefunction to propagate, while nx, ny, nz denote the grid sizing (how finely you want to splice up essentially). Grid sizing also determines how much memory is used (approximately $nx \times ny \times nz$ bits).\\
+\textbf{lx}, \textbf{ly}, \textbf{lz} define the length of the box in which you want the wavefunction to propagate, while \textbf{nx, ny, nz} denote the grid sizing (how finely you want to splice up essentially). Grid sizing also determines how much memory is used (approximately $nx \times ny \times nz$ bits).\\
 
-\textbf{SavingSimulationRunning} will create a folder under "SavedSimulation" and save the figures of the wavefunction propagation while the program is running. The number of pictures saved is dependent on \textbf{numGfxToSave}. \textbf{numGfxToSave} breaks up the total iteration time into equally spaced blocks of time. It will also save the initialization data, and additionally, the final wavefunction as a matlab data file.\\
+\textbf{RealTimePlotting} displays each figure at the time intervals determined by \textbf{numGfxToSave}. Having this setting on also saves the figures when \textbf{SavingSimulationRunning = true}. It is greatly advised to either change \textbf{numGfxToSave} to 1 or set \textbf{RealTimePlotting} to false as it will greatly improve the simulation speed.\\
+
+\textbf{SavingSimulationRunning} will create a folder under "SavedSimulation" (unless otherwise specified by the user by changing \textbf{saveLocation}) and save the matlab arrays of the wavefunction while the program is running. With \textbf{RealTimePlotting} set as true, the figures shown will also be saved. The number of pictures saved is dependent on \textbf{numGfxToSave}. \textbf{numGfxToSave} breaks up the total iteration time into equally spaced blocks of time. It will also save the initialization data, and additionally, the final wavefunction as a matlab data file.\\
 
 \textbf{SavingSimulationEnd} only saves the final wavefunction, as well as the initialization data. This can be used if the propagation of the wavefunction is not as important.\\
 
-\textbf{RealTimePlotting} displays each figure at the time intervals determined by \textbf{numGfxToSave}. This setting is not a requirement to have \textbf{SavingSimulationRunning} = true. It is greatly advised to either change \textbf{numGfxToSave} to 1 or set \textbf{RealTimePlotting} to false as it will greatly improve the simulation speed.\\
-
 \textbf{DisplayAdsorbateAnimation} shows the motion of the adsorbates fed in. This setting is useful if you're feeding a custom potential+path to ensure that it is phrased correctly.\\
 
+\textbf{savingBrownianPaths} will save the randomly generated path to a txt file \textbf{Browniefile} which can then be fed back to be used as a custom potential later.\\
 
+\textbf{propagationMethod} dictates the propagation method used for the program. The methods are as follows:
 
+\begin{enumerate}
+    \item Runge-Kutta method of Order 4
+    \item Split Operator of Order 2
+    \item Split Operator of Order 3 with K split
+    \item Split Operator of Order 3 with V split
+    \item Split Operator of Order 3 with V split, Time dependent
+    \item MEXCUDA while loop with Split Operator $O(dt^3)$ with Vsplit, Time dependent (This is the fastest implementation of CUDA)
+    \item Split Operator of Order 3 with V split, Time dependent in Matlab and CUDA (Primarily to compare the two methods, will output the average difference in the Psi tensor for each)
+    \item Matlab while loop with CUDA Split Operator Order 3, V Split, Time dependent (slower than method 6)
+\end{enumerate}
 
+\bigskip
 
+\textbf{numAdsorbates} determines the number of adsorbates on the scatter surface. !!!Currently, it appears that using \textbf{custompaths = true} requires that the \# of adsorbates is equal to the \# used in the custom path!!! (will likely be patched out hopefully)\\
 
+\textbf{custompaths} is the file you feed with a custom potential and path for the adsorbates. The instructions are further detailed \hyperref[sec:custompaths]{below}.\\
+
+\textbf{I do not really know what these next three do precisely so will have to converse with others to discuss}\\
+
+\textbf{decayType}  1 = exponential repulsive. 2 = Morse attractive. 3 = Morse-like (needs alpha parameter input too!). 4=custom\\
+    
+\textbf{potfile} for 4, text file containing floats for real and imaginary part of potential, seperated by lz. potential should be high to prevent tunelling over cyclic boundary\\
+
+\textbf{zOffset} Shift entire V away from boundary to stop Q.Tunneling through V or to make custom potential go all the way to the surface\\
+
+\subsection{Setup Folder}
+
+It is likely that the only file in here that needs to be changed at a user level will be \textbf{SetupInitialWavefunction.m}. If an alternative wavepacket is necessitated, it is preferable to add an alternative generating function rather than change the existing ones (\textbf{})
+
+\label{sec:custompaths}
 \subsection{Custom Paths and Potentials}
 Functionality to include custom adsorbate paths and potentials was added by Jack Lee.
 
