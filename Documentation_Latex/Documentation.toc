@@ -1,13 +1,22 @@
-\contentsline {section}{\numberline {1}Wavepacket Propagation Introduction}{2}{section.1}%
+\contentsline {section}{\numberline {1}WPP Introduction}{2}{section.1}%
 \contentsline {subsection}{\numberline {1.1}About}{2}{subsection.1.1}%
 \contentsline {subsection}{\numberline {1.2}Prerequisites}{2}{subsection.1.2}%
 \contentsline {section}{\numberline {2}Usage}{3}{section.2}%
-\contentsline {subsection}{\numberline {2.1}Initialization/WavePacketPropagation\_Beta4\_2}{3}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.1}WavePacketPropagation\_Beta4\_2}{3}{subsection.2.1}%
 \contentsline {subsection}{\numberline {2.2}Setup Folder}{5}{subsection.2.2}%
-\contentsline {subsection}{\numberline {2.3}Custom Paths and Potentials}{5}{subsection.2.3}%
-\contentsline {section}{\numberline {3}Appendix}{6}{section.3}%
-\contentsline {subsection}{\numberline {3.1}CUDA + Compiler Install}{6}{subsection.3.1}%
-\contentsline {subsubsection}{\numberline {3.1.1}Windows}{6}{subsubsection.3.1.1}%
-\contentsline {subsubsection}{\numberline {3.1.2}Linux}{6}{subsubsection.3.1.2}%
-\contentsline {subsection}{\numberline {3.2}Ocean Report}{6}{subsection.3.2}%
-\contentsline {subsection}{\numberline {3.3}Test}{20}{subsection.3.3}%
+\contentsline {subsection}{\numberline {2.3}Scripts}{5}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Saving}{5}{subsection.2.4}%
+\contentsline {subsection}{\numberline {2.5}RandomMotion}{5}{subsection.2.5}%
+\contentsline {subsection}{\numberline {2.6}PropagationAlgorithms}{5}{subsection.2.6}%
+\contentsline {subsection}{\numberline {2.7}Print}{5}{subsection.2.7}%
+\contentsline {subsection}{\numberline {2.8}PotentialFiles}{5}{subsection.2.8}%
+\contentsline {subsection}{\numberline {2.9}Operators}{5}{subsection.2.9}%
+\contentsline {subsection}{\numberline {2.10}MEX\_Helpers}{5}{subsection.2.10}%
+\contentsline {subsection}{\numberline {2.11}Graphics}{5}{subsection.2.11}%
+\contentsline {section}{\numberline {3}Custom Paths and Potentials}{5}{section.3}%
+\contentsline {section}{\numberline {4}Appendix}{6}{section.4}%
+\contentsline {subsection}{\numberline {4.1}CUDA + Compiler Install}{6}{subsection.4.1}%
+\contentsline {subsubsection}{\numberline {4.1.1}Windows}{6}{subsubsection.4.1.1}%
+\contentsline {subsubsection}{\numberline {4.1.2}Linux}{7}{subsubsection.4.1.2}%
+\contentsline {subsection}{\numberline {4.2}Ocean Report}{7}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Test}{21}{subsection.4.3}%

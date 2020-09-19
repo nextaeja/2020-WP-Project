@@ -147,6 +147,9 @@ INPUT c:/texlive/2020/texmf-dist/tex/latex/eso-pic/eso-pic.sty
 INPUT c:/texlive/2020/texmf-dist/tex/latex/eso-pic/eso-pic.sty
 INPUT c:/texlive/2020/texmf-dist/tex/latex/pdfpages/pppdftex.def
 INPUT c:/texlive/2020/texmf-dist/tex/latex/pdfpages/pppdftex.def
+INPUT c:/texlive/2020/texmf-dist/tex/latex/soul/soul.sty
+INPUT c:/texlive/2020/texmf-dist/tex/latex/soul/soul.sty
+INPUT c:/texlive/2020/texmf-dist/fonts/tfm/jknappen/ec/ectt1000.tfm
 INPUT c:/texlive/2020/texmf-dist/tex/latex/minted/minted.sty
 INPUT c:/texlive/2020/texmf-dist/tex/latex/minted/minted.sty
 INPUT c:/texlive/2020/texmf-dist/tex/latex/fvextra/fvextra.sty
@@ -293,6 +296,7 @@ INPUT c:/Users/Matthew/Documents/GitHub/2020-WP-Project/Documentation_Latex/_min
 INPUT c:/Users/Matthew/Documents/GitHub/2020-WP-Project/Documentation_Latex/Windows_Compiler.png
 INPUT c:/Users/Matthew/Documents/GitHub/2020-WP-Project/Documentation_Latex/Windows_Compiler.png
 INPUT c:/Users/Matthew/Documents/GitHub/2020-WP-Project/Documentation_Latex/Windows_Compiler.png
+INPUT c:/texlive/2020/texmf-dist/fonts/tfm/public/cm/cmti10.tfm
 INPUT c:/Users/Matthew/Documents/GitHub/2020-WP-Project/Documentation_Latex/Windows_Compiler.png
 INPUT c:/Users/Matthew/Documents/GitHub/2020-WP-Project/Documentation_Latex/Windows_Compiler.png
 OUTPUT c:/Users/Matthew/Documents/GitHub/2020-WP-Project/Documentation_Latex/Documentation.pyg
@@ -434,6 +438,7 @@ INPUT c:/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb
 INPUT c:/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb
 INPUT c:/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb
 INPUT c:/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb
+INPUT c:/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb
 INPUT c:/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb
 INPUT c:/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/symbols/msam10.pfb
 INPUT c:/texlive/2020/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb

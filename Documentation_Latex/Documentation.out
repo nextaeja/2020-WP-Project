@@ -1,13 +1,22 @@
-\BOOKMARK [1][-]{section.1}{Wavepacket Propagation Introduction}{}% 1
+\BOOKMARK [1][-]{section.1}{WPP Introduction}{}% 1
 \BOOKMARK [2][-]{subsection.1.1}{About}{section.1}% 2
 \BOOKMARK [2][-]{subsection.1.2}{Prerequisites}{section.1}% 3
 \BOOKMARK [1][-]{section.2}{Usage}{}% 4
-\BOOKMARK [2][-]{subsection.2.1}{Initialization/WavePacketPropagation\137Beta4\1372}{section.2}% 5
+\BOOKMARK [2][-]{subsection.2.1}{WavePacketPropagation\137Beta4\1372}{section.2}% 5
 \BOOKMARK [2][-]{subsection.2.2}{Setup Folder}{section.2}% 6
-\BOOKMARK [2][-]{subsection.2.3}{Custom Paths and Potentials}{section.2}% 7
-\BOOKMARK [1][-]{section.3}{Appendix}{}% 8
-\BOOKMARK [2][-]{subsection.3.1}{CUDA + Compiler Install}{section.3}% 9
-\BOOKMARK [3][-]{subsubsection.3.1.1}{Windows}{subsection.3.1}% 10
-\BOOKMARK [3][-]{subsubsection.3.1.2}{Linux}{subsection.3.1}% 11
-\BOOKMARK [2][-]{subsection.3.2}{Ocean Report}{section.3}% 12
-\BOOKMARK [2][-]{subsection.3.3}{Test}{section.3}% 13
+\BOOKMARK [2][-]{subsection.2.3}{Scripts}{section.2}% 7
+\BOOKMARK [2][-]{subsection.2.4}{Saving}{section.2}% 8
+\BOOKMARK [2][-]{subsection.2.5}{RandomMotion}{section.2}% 9
+\BOOKMARK [2][-]{subsection.2.6}{PropagationAlgorithms}{section.2}% 10
+\BOOKMARK [2][-]{subsection.2.7}{Print}{section.2}% 11
+\BOOKMARK [2][-]{subsection.2.8}{PotentialFiles}{section.2}% 12
+\BOOKMARK [2][-]{subsection.2.9}{Operators}{section.2}% 13
+\BOOKMARK [2][-]{subsection.2.10}{MEX\137Helpers}{section.2}% 14
+\BOOKMARK [2][-]{subsection.2.11}{Graphics}{section.2}% 15
+\BOOKMARK [1][-]{section.3}{Custom Paths and Potentials}{}% 16
+\BOOKMARK [1][-]{section.4}{Appendix}{}% 17
+\BOOKMARK [2][-]{subsection.4.1}{CUDA + Compiler Install}{section.4}% 18
+\BOOKMARK [3][-]{subsubsection.4.1.1}{Windows}{subsection.4.1}% 19
+\BOOKMARK [3][-]{subsubsection.4.1.2}{Linux}{subsection.4.1}% 20
+\BOOKMARK [2][-]{subsection.4.2}{Ocean Report}{section.4}% 21
+\BOOKMARK [2][-]{subsection.4.3}{Test}{section.4}% 22

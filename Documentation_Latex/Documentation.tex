@@ -20,6 +20,7 @@
 \usepackage{bm}
 \usepackage{float}
 \usepackage{pdfpages}
+\usepackage{soul}
 
 \usepackage{minted}
 
@@ -87,7 +88,7 @@
 
 \newpage
 
-\section{Wavepacket Propagation Introduction}
+\section{WPP Introduction}
 \subsection{About}
 
 The Wavepacket propagation project is an extension of a Part III project by Ocean Haghighi-Daly. It is a 3D working version of a Working attempt at a Split-Operator method of wavepacket propagation. 
@@ -146,9 +147,9 @@ For a Linux system, the CUDA installation should come with the corresponding NVC
 
 \section{Usage}
 
-\subsection{Initialization/WavePacketPropagation\_Beta4\_2} 
+\subsection{WavePacketPropagation\_Beta4\_2} 
 
-All variables are in SI units. SetupSIUnits.m initializes global variables used in picoscale wavefunction propagation:
+All variables are in SI units. \underline{\textit{SetupSIUnits.m}} initializes global variables used in picoscale wavefunction propagation:
 
 \begin{align*}
     \textbf{hBar} &= 1.054571800 \times 10^{-34} Js\\
@@ -163,13 +164,13 @@ All variables are in SI units. SetupSIUnits.m initializes global variables used 
 
 \textbf{RealTimePlotting} displays each figure at the time intervals determined by \textbf{numGfxToSave}. Having this setting on also saves the figures when \textbf{SavingSimulationRunning = true}. It is greatly advised to either change \textbf{numGfxToSave} to 1 or set \textbf{RealTimePlotting} to false as it will greatly improve the simulation speed.\\
 
-\textbf{SavingSimulationRunning} will create a folder under "SavedSimulation" (unless otherwise specified by the user by changing \textbf{saveLocation}) and save the matlab arrays of the wavefunction while the program is running. With \textbf{RealTimePlotting} set as true, the figures shown will also be saved. The number of pictures saved is dependent on \textbf{numGfxToSave}. \textbf{numGfxToSave} breaks up the total iteration time into equally spaced blocks of time. It will also save the initialization data, and additionally, the final wavefunction as a matlab data file.\\
+\textbf{SavingSimulationRunning} will create a folder under \underline{\textit{SavedSimulation}} (unless otherwise specified by the user by changing \textbf{saveLocation}) and save the matlab arrays of the wavefunction while the program is running. With \textbf{RealTimePlotting} set as true, the figures shown will also be saved. The number of pictures saved is dependent on \textbf{numGfxToSave}. \textbf{numGfxToSave} breaks up the total iteration time into equally spaced blocks of time. It will also save the initialization data, and additionally, the final wavefunction as a matlab data file.\\
 
 \textbf{SavingSimulationEnd} only saves the final wavefunction, as well as the initialization data. This can be used if the propagation of the wavefunction is not as important.\\
 
 \textbf{DisplayAdsorbateAnimation} shows the motion of the adsorbates fed in. This setting is useful if you're feeding a custom potential+path to ensure that it is phrased correctly.\\
 
-\textbf{savingBrownianPaths} will save the randomly generated path to a txt file \textbf{Browniefile} which can then be fed back to be used as a custom potential later.\\
+\textbf{savingBrownianPaths} will save the randomly generated path to a txt file \textbf{Browniefile.txt} which can then be fed back to be used as a custom potential later.\\
 
 \textbf{propagationMethod} dictates the propagation method used for the program. The methods are as follows:
 
@@ -181,7 +182,7 @@ All variables are in SI units. SetupSIUnits.m initializes global variables used 
     \item Split Operator of Order 3 with V split, Time dependent
     \item MEXCUDA while loop with Split Operator $O(dt^3)$ with Vsplit, Time dependent (This is the fastest implementation of CUDA)
     \item Split Operator of Order 3 with V split, Time dependent in Matlab and CUDA (Primarily to compare the two methods, will output the average difference in the Psi tensor for each)
-    \item Matlab while loop with CUDA Split Operator Order 3, V Split, Time dependent (slower than method 6)
+    \item Matlab while loop with CUDA Split Operator Order 3, V Split, Time dependent (generally slower than method 6)
 \end{enumerate}
 
 \bigskip
@@ -190,26 +191,45 @@ All variables are in SI units. SetupSIUnits.m initializes global variables used 
 
 \textbf{custompaths} is the file you feed with a custom potential and path for the adsorbates. The instructions are further detailed \hyperref[sec:custompaths]{below}.\\
 
-\textbf{I do not really know what these next three do precisely so will have to converse with others to discuss}\\
 
-\textbf{decayType}  1 = exponential repulsive. 2 = Morse attractive. 3 = Morse-like (needs alpha parameter input too!). 4=custom\\
+\textbf{decayType} is the potential that extends from the corrugation function in one dimension. 1 = exponential repulsive potential. 2 = Morse attractive. 3 = Morse-like, so it can be adjusted between morse and exponential by changing alpha. alpha = 0 is the same as exponential, alpha = 2 is morse. 4 = custom potential: this uses the custom potential in the text file specified by \textbf{potfile}, as explained later.\\
+
     
-\textbf{potfile} for 4, text file containing floats for real and imaginary part of potential, seperated by lz. potential should be high to prevent tunelling over cyclic boundary\\
+\textbf{potfile}: Text file containing floats for real and imaginary part of potential, seperated by \textbf{lz}. The potential should be high to prevent tunelling over cyclic boundary\\
 
-\textbf{zOffset} Shift entire V away from boundary to stop Q.Tunneling through V or to make custom potential go all the way to the surface\\
+\textbf{zOffset} translates the entire corrugation function away from the surface by the distance specified. It can be used to prevent quantum tunnelling due to cyclic boundary conditions for \textbf{decayType} 1 - 3, or it can be made negative to allow you to specify the potential between the corrugation function and surface for
+\textbf{decayType} = 4.\\
 
 \subsection{Setup Folder}
 
-It is likely that the only file in here that needs to be changed at a user level will be \textbf{SetupInitialWavefunction.m}. If an alternative wavepacket is necessitated, it is preferable to add an alternative generating function rather than change the existing ones (\textbf{})
+It is likely that the only file in here that needs to be changed at a user level will be \textit{\ul{SetupInitialWavefunction.m}}. If an alternative wavepacket is necessitated, it is preferable to add an alternative generating function rather than change the existing ones (\textit{\ul{InitializeGaussianWavefunction3D.m}}). The relevant parameters and functionality is detailed in considerable depth within the file itself.
+
+\subsection{Scripts}
+
+\subsection{Saving}
+
+\subsection{RandomMotion}
+
+\subsection{PropagationAlgorithms}
+
+\subsection{Print}
+
+\subsection{PotentialFiles}
+
+\subsection{Operators}
+
+\subsection{MEX\_Helpers}
+
+\subsection{Graphics}
 
 \label{sec:custompaths}
-\subsection{Custom Paths and Potentials}
+\section{Custom Paths and Potentials}
 Functionality to include custom adsorbate paths and potentials was added by Jack Lee.
 
 \begin{enumerate}
-    \item Custom potential: this allows you to specify a custom potential profile in the Z direction. To apply this, set decaytype to 4 and specify a .txt file (in beta4\_2) as a string in potfile. This should contain several numbers separated by spaces (or new lines) which are the values for the potential in Joules in each cell of the simulation out from the corrugation function (+zoffset), i.e. the values are separated by a distance of lz/nz. The potential is zero for all z not specified by the file. Zoffset should have a negative value, and can be used to extend the potential back from the gaussians to the surface, as if zoffset is 0 the area between the surface and the gaussian peaks will have 0 potential. The potential specified should be very high near the surface to prevent the wavepacket from getting past it, because the propagation algorithm leads to cyclic boundary conditions so any psi that reaches the end will appear at the other side, which is non-physical.
-    \item Custom paths: this allows you to specify the paths that adsorbates take, rather than having them be generated randomly. To enable this, set custompaths to true and specify in pathfile a text file (in beta4\_2) formatted as follows: the first entry on each line should be a time, then for each adsorbate there should be its x position and then its y position at that time, separated by spaces. There can be any number of times, as long as the first is $\leq$ tStart and the last is $\geq$ tFinish, and they’ll be interpolated to get the paths. 
-    \item Saving paths: this allows you to save the randomly generated paths adsorbates take this time in the simulation. It doesn’t do anything if custom paths is on. To enable it, set savingBrownianPaths to true and name a .txt file in Browniefile, which will be overwritten or created in beta4\_2. This saves the paths in the same format as Custom paths reads them, with one line for each timestep of the simulation. These files can later be read by custom paths to reproduce this simulation (and could be used to vary the potential, detail etc.), although there is a small error introduced here so that the final psi from the custom paths simulation is slightly different to that of the original. Two custom paths simulations from the same source will be the same, however.
+    \item \textbf{Custom potential:} this allows you to specify a custom potential profile in the Z direction. To apply this, set \textbf{decayType} to 4 and specify a .txt file (in beta4\_2) as a string in potfile. This should contain several numbers separated by spaces (or new lines) which are the values for the potential in Joules in each cell of the simulation out from the corrugation function (+\textbf{zOffset}), i.e. the values are separated by a distance of \textbf{lz/nz}. The potential is zero for all z not specified by the file. \textbf{zOffset} should have a negative value, and can be used to extend the potential back from the gaussians to the surface, as if \textbf{zOffset} is 0 the area between the surface and the gaussian peaks will have 0 potential. The potential specified should be very high near the surface to prevent the wavepacket from getting past it, because the propagation algorithm leads to cyclic boundary conditions so any psi that reaches the end will appear at the other side, which is non-physical.
+    \item \textbf{Custom paths:} this allows you to specify the paths that adsorbates take, rather than having them be generated randomly. To enable this, set \textbf{custompaths} to true and specify in \textbf{pathfile} a text file (in beta4\_2) formatted as follows: the first entry on each line should be a time, then for each adsorbate there should be its x position and then its y position at that time, separated by spaces. There can be any number of times, as long as the first is $\leq$ \textbf{tStart} and the last is $\geq$ \textbf{tFinish}, and they’ll be interpolated to get the paths. 
+    \item \textbf{Saving paths:} this allows you to save the randomly generated paths adsorbates take this time in the simulation. It doesn’t do anything if custom paths is on. To enable it, set \textbf{savingBrownianPaths} to true and name a .txt file in \textbf{Browniefile}, which will be overwritten or created in beta4\_2. This saves the paths in the same format as custom paths reads them, with one line for each timestep of the simulation. These files can later be read by custom paths to reproduce this simulation (and could be used to vary the potential, detail etc.), although there is a small error introduced here so that the final psi from the custom paths simulation is slightly different to that of the original. Two custom paths simulations from the same source will be the same, however.
 \end{enumerate}
 
 
