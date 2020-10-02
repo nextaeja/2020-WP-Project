@@ -12,7 +12,7 @@
 % 3He mass = 3.0160293amu
 % 1Å ~ Atomic diameter
 
-function WavepacketPropagation_beta4_2
+function WavepacketPropagation_beta4_2(lxin,lyin,lzin,nxin,nyin,nzin,numAdsorbatesin,alpha)
     tbegin = tic;  
 %===START=TIMING========================================================================================%
     tic
@@ -27,15 +27,22 @@ function WavepacketPropagation_beta4_2
     gpuDevice(1);
     SetupSIUnits();
     
+    lx=lxin*A;
+    ly=lyin*A;
+    lz=lzin*A;
+    nx=nxin;
+    ny=nyin;
+    nz=nzin;
+    numAdsorbates=numAdsorbatesin;
     % Setup lengths. Units = m
-    lx = 90*A;
-    ly = 90*A;
-    lz = 90*A;
+    %lx = 90*A;
+    %ly = 90*A;
+    %lz = 90*A;
     
     % Setup grid - use powers of 2 for quickest FFT
-    nx = 128;
-    ny = 128;
-    nz = 512;
+    %nx = 64;
+    %ny = 64;
+    %nz = 64;
     
     % Acceptable error in wavepacket norm
     eps = 1e-4;
@@ -45,9 +52,9 @@ function WavepacketPropagation_beta4_2
     tStart = 0*ps;      % Units = s
     tFinish = 12*ps;    % Units = s
         
-    realTimePlotting = true; %also determines if graphics are saved for SavingSimulationRunning
-    savingSimulationRunning = false;
-    savingSimulationEnd = false;
+    realTimePlotting = false; %also determines if graphics are saved for SavingSimulationRunning
+    savingSimulationRunning = true;
+    savingSimulationEnd = true;
     displayAdsorbateAnimation = false;
     savingBrownianPaths=false;
     Browniefile="PotentialFiles/brownianpaths.txt";
@@ -55,16 +62,16 @@ function WavepacketPropagation_beta4_2
     saveLocation =""; %if "" it will save in beta 4_2
     
     numPsiToSave = 1;%not used for prop method 6
-    numGfxToSave = 20; %for prop 6, psi saved at the same time, psi can be saved while disabling graphics by disabling realTimePlotting 
+    numGfxToSave = 10; %for prop 6, psi saved at the same time, psi can be saved while disabling graphics by disabling realTimePlotting 
     
     % Propagation method: 1 = RK4Step. 2 = Split Operator O(dt^2). 3 = Split Operator O(dt^3), K split. 4 = Sp. Op. O(dt^3), V split. 5 = Sp.Op. O(dt^3), V
     % split, time dependent. 6 = MEXCUDA while loop with Sp.Op. O(dt^3), V split, time dependent.
     % 7 = matlab and MEX Sp.Op. O(dt^3), V split, time dependent. 8 = MEX Sp. Op. O(dt^3) V split,
     % time dependent. 
     propagationMethod = 6;
-    numAdsorbates = 30;
+    %numAdsorbates = 8;
     
-    custompaths = true;
+    custompaths = false;
     pathfile = "PotentialFiles/brownianpaths.txt";
         
     
@@ -77,7 +84,7 @@ function WavepacketPropagation_beta4_2
     
     zOffset = -5*A; % Shift entire V away from boundary to stop Q.Tunneling through V %%% or to make custom potential go all the way to the surface
     
-    alpha = 2; % Only needed for Morse-like potential. alpha = 2 gives Morse potential. alpha = 0 gives exponential potential.
+    %alpha = 2; % Only needed for Morse-like potential. alpha = 2 gives Morse potential. alpha = 0 gives exponential potential.
     xSigma = 3*(5.50/6)*A;       % x standard deviation
     ySigma = 3*(5.50/6)*A;       % y standard deviation
     gaussPeakVal = 3*1.61*A;   % peak value of Gaussian
