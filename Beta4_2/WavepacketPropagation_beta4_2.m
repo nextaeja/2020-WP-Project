@@ -11,7 +11,7 @@
 % 1amu =  1.660539040e-27 kg. 1Å = 1e-10m. 1ps = 1e-12s.
 % 3He mass = 3.0160293amu
 % 1Å ~ Atomic diameter
-
+                                                                                                                                                                                                                                                                                                                                                                                                                                           
 function WavepacketPropagation_beta4_2
     tbegin = tic;  
 %===START=TIMING========================================================================================%
@@ -48,7 +48,7 @@ function WavepacketPropagation_beta4_2
     realTimePlotting = true; %also determines if graphics are saved for SavingSimulationRunning
     savingSimulationRunning = false;
     savingSimulationEnd = false;
-    displayAdsorbateAnimation = false;
+    displayAdsorbateAnimation = true;
     savingBrownianPaths=false;
     Browniefile="PotentialFiles/brownianpaths.txt";
     
@@ -67,9 +67,17 @@ function WavepacketPropagation_beta4_2
     custompaths = true;
     pathfile = "PotentialFiles/brownianpaths.txt";
         
+    if (custompaths == true) %autoredetermines what num adsorbates is for a custom potential as different numAdsorbates between customPotential and program result in strange errors (perhaps disable this section for 2D scattering as it has not yet been tested)
+        fid = fopen(pathfile,'rt');
+        tLines = fgets(fid);
+        numCols = numel(strfind(tLines,' '))/2;
+        fclose(fid);
+        numAdsorbates =  numCols;
+    end
+    
     
     numSteps = round(tFinish/dt0);
-
+    
     
     decayType = 3; % 1 = exponential repulsive. 2 = Morse attractive. 3 = Morse-like (needs alpha parameter input too!). 4=custom
     

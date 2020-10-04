@@ -21,7 +21,6 @@
 \usepackage{float}
 \usepackage{pdfpages}
 \usepackage{soul}
-
 \usepackage{minted}
 
 \let\oldvec=\vec
@@ -48,6 +47,9 @@
     \end{center}
     }
 
+
+
+
 \newtheorem{sol}{Solution}[subsection]
   
 \newtheorem{thm}{Theorem}
@@ -62,9 +64,6 @@
 \newcommand{\rbar}{\right|}
 \renewcommand*{\b}[1]{\mathbf{#1}}
 \def\matrix#1{\underline{\underline{#1}}}
-
-
-
 
 
 
@@ -91,12 +90,14 @@
 \section{WPP Introduction}
 \subsection{About}
 
-The Wavepacket propagation project is an extension of a Part III project by Ocean Haghighi-Daly. It is a 3D working version of a Working attempt at a Split-Operator method of wavepacket propagation. 
+The Wavepacket propagation project is an extension of a Part III project by Ocean Haghighi-Daly. His paper is attached \hyperref[sec:Oceanreport]{below}. It is a working version of a 3D Split-Operator method of wavepacket propagation. The primary point of improvement to the program is that the propagation algorithm has been completely redone in CUDA C, which has greatly improvement the speed of simulation. Other improvements include various bugfixes of various issues (all of which can be found on the \href{https://github.com/nextaeja/2020-WP-Project}{Github Page} (Currently inaccesible to public))
 
 
 \subsection{Prerequisites}
 
-To begin with, a computer with a CUDA compatible GPU (\href{https://developer.nvidia.com/cuda-gpus#compute}{List of compatible GPUs}) is required.The MEX/CUDA dependent files have already been compiled for an x64 Linux and x64 Windows system with CUDA 10.1 compatibility. However, it is potentially necessary to install a CUDA/C++ compiler depending on the CUDA capability your GPU has.\\
+To begin with, a computer with a CUDA compatible GPU (\href{https://developer.nvidia.com/cuda-gpus#compute}{List of compatible GPUs}) is required.The MEX/CUDA dependent files have already been compiled for an x64 Linux and x64 Windows system with CUDA 10.1 compatibility. However, it is still potentially necessary to install a CUDA/C++ compiler depending on the CUDA capability your GPU has as matlab/CUDA can be quite finicky with versions.\\
+
+
 
 \textbf{Installation Guides:}
 
@@ -162,13 +163,13 @@ All variables are in SI units. \underline{\textit{SetupSIUnits.m}} initializes g
 
 \textbf{lx}, \textbf{ly}, \textbf{lz} define the length of the box in which you want the wavefunction to propagate, while \textbf{nx, ny, nz} denote the grid sizing (how finely you want to splice up essentially). Grid sizing also determines how much memory is used (approximately $nx \times ny \times nz$ bits).\\
 
-\textbf{RealTimePlotting} displays each figure at the time intervals determined by \textbf{numGfxToSave}. Having this setting on also saves the figures when \textbf{SavingSimulationRunning = true}. It is greatly advised to either change \textbf{numGfxToSave} to 1 or set \textbf{RealTimePlotting} to false as it will greatly improve the simulation speed.\\
+\textbf{RealTimePlotting} displays each figure at the time intervals determined by \textbf{numGfxToSave}. Having this setting on also saves the figures when \textbf{SavingSimulationRunning = true}. It is greatly advised to either change \textbf{numGfxToSave} to 1 or set \textbf{RealTimePlotting} to false as it will greatly improve the simulation speed. This is because to render the images, the program is required to copy the CUDA C arrays into matlab, which we have noted to be extremely time consuming.\\
 
-\textbf{SavingSimulationRunning} will create a folder under \underline{\textit{SavedSimulation}} (unless otherwise specified by the user by changing \textbf{saveLocation}) and save the matlab arrays of the wavefunction while the program is running. With \textbf{RealTimePlotting} set as true, the figures shown will also be saved. The number of pictures saved is dependent on \textbf{numGfxToSave}. \textbf{numGfxToSave} breaks up the total iteration time into equally spaced blocks of time. It will also save the initialization data, and additionally, the final wavefunction as a matlab data file.\\
+\textbf{SavingSimulationRunning} will create a folder under \underline{\textit{SavedSimulation}} (unless otherwise specified by the user by changing \textbf{saveLocation}) and save the matlab arrays of the wavefunction while the program is running. With \textbf{RealTimePlotting} set as true, the figures shown will also be saved. The number of pictures saved is dependent on \textbf{numGfxToSave}. \textbf{numGfxToSave} breaks up the total iteration time into equally spaced blocks of time. It will also save the initialization data, and additionally, the final wavefunction as a matlab data file. As a result, this will also greatly increase simulation time.\\
 
-\textbf{SavingSimulationEnd} only saves the final wavefunction, as well as the initialization data. This can be used if the propagation of the wavefunction is not as important.\\
+\textbf{SavingSimulationEnd} will make it so that the program only saves the final wavefunction, as well as the initialization data. This can be used if the propagation of the wavefunction is not as important. This does not significantly increase simulation time relative to \textbf{SavingSimulationRunning}\\
 
-\textbf{DisplayAdsorbateAnimation} shows the motion of the adsorbates fed in. This setting is useful if you're feeding a custom potential+path to ensure that it is phrased correctly.\\
+\textbf{DisplayAdsorbateAnimation} shows the motion of the adsorbates in an animation. This can be useful useful if you're feeding a custom potential+path to ensure that it is phrased correctly. This setting generally does not signiicantly impact the overall performance of the program.\\
 
 \textbf{savingBrownianPaths} will save the randomly generated path to a txt file \textbf{Browniefile.txt} which can then be fed back to be used as a custom potential later.\\
 
@@ -270,7 +271,7 @@ The corresponding CUDA install should come with the NVCC compiler necessary to c
 
 
 \subsection{Ocean Report}
-
+\label{sec:Oceanreport}
 The report is displayed on the next pages
 \includepdf[pages=-]{Ocean_report.pdf}
 
