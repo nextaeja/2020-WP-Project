@@ -2,7 +2,7 @@ function PrintEnergies()
     global mass vel;
     
     En = EnergyExpectation();
-    Mom = MomentumExpectation()
+    Mom = MomentumExpectation();
     KE = sum(Mom.^2)/(2*mass);
     Vel = sqrt(2*KE/mass);
     percentDiffEnergy = 100*(En - KE)/En;

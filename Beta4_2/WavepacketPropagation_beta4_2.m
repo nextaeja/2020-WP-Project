@@ -247,7 +247,7 @@ function WavepacketPropagation_beta4_2
             end
             
             % Produce graphics if asked and if correct # of steps has passed
-            if gfxSteps > 0 && mod(it, gfxSteps) == 0
+            if gfxSteps > 0 && mod(it, gfxSteps) == 0p
                 UpdateGraphics(t, it)
                 
                 if savingSimulationRunning

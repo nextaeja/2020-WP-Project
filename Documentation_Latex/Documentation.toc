@@ -5,18 +5,17 @@
 \contentsline {subsection}{\numberline {2.1}WavePacketPropagation\_Beta4\_2}{3}{subsection.2.1}%
 \contentsline {subsection}{\numberline {2.2}Setup Folder}{5}{subsection.2.2}%
 \contentsline {subsection}{\numberline {2.3}Scripts}{5}{subsection.2.3}%
-\contentsline {subsection}{\numberline {2.4}Saving}{5}{subsection.2.4}%
-\contentsline {subsection}{\numberline {2.5}RandomMotion}{5}{subsection.2.5}%
-\contentsline {subsection}{\numberline {2.6}PropagationAlgorithms}{5}{subsection.2.6}%
-\contentsline {subsection}{\numberline {2.7}Print}{5}{subsection.2.7}%
-\contentsline {subsection}{\numberline {2.8}PotentialFiles}{5}{subsection.2.8}%
-\contentsline {subsection}{\numberline {2.9}Operators}{5}{subsection.2.9}%
-\contentsline {subsection}{\numberline {2.10}MEX\_Helpers}{5}{subsection.2.10}%
-\contentsline {subsection}{\numberline {2.11}Graphics}{5}{subsection.2.11}%
-\contentsline {section}{\numberline {3}Custom Paths and Potentials}{5}{section.3}%
-\contentsline {section}{\numberline {4}Appendix}{6}{section.4}%
-\contentsline {subsection}{\numberline {4.1}CUDA + Compiler Install}{6}{subsection.4.1}%
-\contentsline {subsubsection}{\numberline {4.1.1}Windows}{6}{subsubsection.4.1.1}%
-\contentsline {subsubsection}{\numberline {4.1.2}Linux}{7}{subsubsection.4.1.2}%
-\contentsline {subsection}{\numberline {4.2}Ocean Report}{7}{subsection.4.2}%
-\contentsline {subsection}{\numberline {4.3}Test}{21}{subsection.4.3}%
+\contentsline {subsection}{\numberline {2.4}Saving}{6}{subsection.2.4}%
+\contentsline {subsection}{\numberline {2.5}RandomMotion}{6}{subsection.2.5}%
+\contentsline {subsection}{\numberline {2.6}PropagationAlgorithms}{7}{subsection.2.6}%
+\contentsline {subsection}{\numberline {2.7}Print}{7}{subsection.2.7}%
+\contentsline {subsection}{\numberline {2.8}PotentialFiles}{7}{subsection.2.8}%
+\contentsline {subsection}{\numberline {2.9}Operators}{7}{subsection.2.9}%
+\contentsline {subsection}{\numberline {2.10}MEX\_Helpers}{7}{subsection.2.10}%
+\contentsline {subsection}{\numberline {2.11}Graphics}{8}{subsection.2.11}%
+\contentsline {section}{\numberline {3}Custom Paths and Potentials}{8}{section.3}%
+\contentsline {section}{\numberline {4}Appendix}{9}{section.4}%
+\contentsline {subsection}{\numberline {4.1}CUDA + Compiler Install}{9}{subsection.4.1}%
+\contentsline {subsubsection}{\numberline {4.1.1}Windows}{9}{subsubsection.4.1.1}%
+\contentsline {subsubsection}{\numberline {4.1.2}Linux}{9}{subsubsection.4.1.2}%
+\contentsline {subsection}{\numberline {4.2}Ocean Report}{9}{subsection.4.2}%
