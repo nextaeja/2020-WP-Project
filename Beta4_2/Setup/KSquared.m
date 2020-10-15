@@ -1,3 +1,8 @@
+% Copyright (c) 2020, Lorenzo Basso, Jack Lee, Matthew Zhang, Feiyang Chen
+% Copyright (c) 2018, Francis Haghighi-Daly 
+% All rights reserved.
+% This file is part of the WooStOr - Wavepacket prOpopgatiOn using SpliT OperatR method, subject to the GNU/GPL-3.0-or-later.
+
 % k^2 matrix setup
 % Note: k^2 NOT defined 2*pi/Lx... but 1/Lx...
 % Used to get del^2 in Fourier space by doing k^2*fft(psi)

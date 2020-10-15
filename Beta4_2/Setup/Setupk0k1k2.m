@@ -1,3 +1,8 @@
+% Copyright (c) 2020, Lorenzo Basso, Jack Lee, Matthew Zhang, Feiyang Chen
+% Copyright (c) 2018, Francis Haghighi-Daly 
+% All rights reserved.
+% This file is part of the WooStOr - Wavepacket prOpopgatiOn using SpliT OperatR method, subject to the GNU/GPL-3.0-or-later.
+
 % Creates normalised k vector (k0) and 2 perpendiculars (k1 and k2)
 % Repeated in 3D matrices - used instead of for loops for quicker calculations
 function [k0x3D, k0y3D, k0z3D, k1x3D, k1y3D, k1z3D, k2x3D, k2y3D, k2z3D] = Setupk0k1k2()
